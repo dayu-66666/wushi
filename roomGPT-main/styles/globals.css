@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-[#2e4a3d] bg-[#2e4a3d] px-5 py-3 text-sm font-black text-[#f6f0e3] shadow-[0_8px_20px_rgba(46,74,61,0.25)] transition hover:bg-[#1f332a] active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-[#e6ddc9] bg-[#fffcf5] px-5 py-3 text-sm font-black text-[#2a2620] transition hover:bg-[#f6f0e3] active:scale-[0.98];
+  }
+}
+
+@media (min-width: 400px) {
+  .background-gradient::before {
+    background: radial-gradient(
+      20% 50% at 50% 50%,
+      rgba(71, 127, 247, 0.376) 0%,
+      rgba(37, 38, 44, 0) 100%
+    );
+    z-index: -10;
+    content: "";
+    position: absolute;
+    inset: 0px;
+    transform: scale(1);
+    pointer-events: none;
+  }
+}

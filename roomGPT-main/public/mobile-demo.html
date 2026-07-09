@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>空间焕新 AI - 手机端交互原型</title>
+    <style>
+      :root {
+        --ink: #17191d;
+        --muted: #6f747b;
+        --line: #e5e0d7;
+        --paper: #fbfaf7;
+        --wash: #eef6f3;
+        --brand: #2d766f;
+        --accent: #d5a15f;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #d9d7d1;
+        color: var(--ink);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+
+      .phone {
+        min-height: 100svh;
+        max-width: 430px;
+        margin: 0 auto;
+        background: var(--paper);
+        box-shadow: 0 0 80px rgb(0 0 0 / 18%);
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+        border-bottom: 1px solid rgb(229 224 215 / 90%);
+        background: rgb(251 250 247 / 95%);
+        backdrop-filter: blur(12px);
+      }
+
+      .brand {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        gap: 9px;
+        font-weight: 900;
+      }
+
+      .mark {
+        width: 32px;
+        height: 32px;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--brand), var(--accent));
+        box-shadow: 0 8px 20px rgb(45 118 111 / 22%);
+      }
+
+      .status {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--muted);
+        padding: 7px 10px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      main {
+        padding: 20px 18px 116px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: var(--brand);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 34px;
+        line-height: 1.14;
+        letter-spacing: 0;
+      }
+
+      .intro {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.8;
+      }
+
+      .panel {
+        margin-top: 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        overflow: hidden;
+      }
+
+      .preview {
+        position: relative;
+        display: grid;
+        min-height: 286px;
+        place-items: center;
+        overflow: hidden;
+        background:
+          linear-gradient(rgb(20 24 29 / 12%), rgb(20 24 29 / 12%)),
+          url("/original-pic.jpg") center / cover;
+      }
+
+      .preview img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .upload-copy {
+        position: relative;
+        display: grid;
+        gap: 8px;
+        min-width: 210px;
+        border-radius: 10px;
+        background: rgb(0 0 0 / 42%);
+        color: #fff;
+        padding: 24px 22px;
+        text-align: center;
+      }
+
+      .upload-copy strong {
+        font-size: 18px;
+      }
+
+      .upload-copy span {
+        font-size: 13px;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        padding: 12px;
+        background: var(--wash);
+      }
+
+      .file-button {
+        display: grid;
+        min-height: 52px;
+        place-items: center;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        font-weight: 900;
+      }
+
+      .file-button.primary {
+        border-color: var(--brand);
+        background: var(--brand);
+        color: #fff;
+        box-shadow: 0 12px 26px rgb(45 118 111 / 24%);
+      }
+
+      .file-button input {
+        display: none;
+      }
+
+      .field-grid {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field label {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      select {
+        width: 100%;
+        min-height: 50px;
+        appearance: none;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(45deg, transparent 50%, var(--muted) 50%) right 17px top 21px /
+            7px 7px no-repeat,
+          linear-gradient(135deg, var(--muted) 50%, transparent 50%) right 12px top 21px /
+            7px 7px no-repeat,
+          #fff;
+        padding: 0 42px 0 14px;
+        color: var(--ink);
+        font-weight: 800;
+      }
+
+      .tips {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .tips span {
+        display: grid;
+        min-height: 46px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgb(255 255 255 / 70%);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .result {
+        display: none;
+        margin-top: 18px;
+      }
+
+      .result.is-visible {
+        display: block;
+      }
+
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 1.2;
+      }
+
+      .badge {
+        border-radius: 999px;
+        background: var(--wash);
+        color: var(--brand);
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      figure {
+        margin: 0;
+      }
+
+      figure img {
+        display: block;
+        width: 100%;
+        height: 210px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #ece8df;
+      }
+
+      figcaption {
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .bottom-bar {
+        position: fixed;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 3;
+        max-width: 430px;
+        margin: 0 auto;
+        border-top: 1px solid rgb(229 224 215 / 90%);
+        background: rgb(251 250 247 / 96%);
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        backdrop-filter: blur(12px);
+      }
+
+      .cta-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 10px;
+      }
+
+      .cta,
+      .ghost {
+        min-height: 52px;
+        border-radius: 8px;
+        font-weight: 900;
+      }
+
+      .cta {
+        border: 0;
+        background: var(--brand);
+        color: #fff;
+        box-shadow: 0 12px 26px rgb(45 118 111 / 24%);
+      }
+
+      .cta:disabled {
+        background: #a7b9b5;
+        box-shadow: none;
+      }
+
+      .ghost {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+        padding: 0 14px;
+      }
+
+      .toast {
+        display: none;
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .toast.is-visible {
+        display: block;
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+        border: 2px solid rgb(255 255 255 / 45%);
+        border-top-color: #fff;
+        border-radius: 50%;
+        vertical-align: -3px;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="phone">
+      <header class="topbar">
+        <div class="brand">
+          <span class="mark"></span>
+          <span>空间焕新 AI</span>
+        </div>
+        <span class="status" id="statusText">原型预览</span>
+      </header>
+
+      <main>
+        <p class="eyebrow">AI Interior Studio</p>
+        <h1>拍一张房间照，快速预览新搭配</h1>
+        <p class="intro">当前是手机端交互原型：上传和生成都是本地模拟，暂时不连接 AI 模型。</p>
+
+        <section class="panel">
+          <div class="preview" id="preview">
+            <div class="upload-copy" id="uploadCopy">
+              <strong>上传房间照片</strong>
+              <span>支持 JPG、PNG、WEBP</span>
+            </div>
+          </div>
+          <div class="actions">
+            <label class="file-button primary">
+              选择照片
+              <input id="galleryInput" type="file" accept="image/*" />
+            </label>
+            <label class="file-button">
+              拍照
+              <input id="cameraInput" type="file" accept="image/*" capture="environment" />
+            </label>
+          </div>
+        </section>
+
+        <section class="field-grid" aria-label="生成设置">
+          <div class="field">
+            <label for="styleSelect">空间风格</label>
+            <select id="styleSelect">
+              <option>现代简约</option>
+              <option>奶油原木</option>
+              <option>中古复古</option>
+              <option>轻奢酒店</option>
+              <option>热带自然</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="roomSelect">空间类型</label>
+            <select id="roomSelect">
+              <option>客厅</option>
+              <option>卧室</option>
+              <option>餐厅</option>
+              <option>书房</option>
+              <option>卫生间</option>
+              <option>电竞房</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="tips">
+          <span>墙面完整</span>
+          <span>地面清晰</span>
+          <span>正视角</span>
+          <span>少反光</span>
+        </section>
+
+        <section class="result" id="result">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Preview</p>
+              <h2>模拟生成结果</h2>
+            </div>
+            <span class="badge" id="resultBadge">现代简约 · 客厅</span>
+          </div>
+          <div class="compare">
+            <figure>
+              <img id="beforeImage" src="/original-pic.jpg" alt="原始房间" />
+              <figcaption>原图</figcaption>
+            </figure>
+            <figure>
+              <img src="/generated-pic-2.jpg" alt="模拟生成后的房间" />
+              <figcaption>生成图</figcaption>
+            </figure>
+          </div>
+        </section>
+      </main>
+
+      <div class="bottom-bar">
+        <div class="cta-row">
+          <button class="cta" id="generateButton" type="button" disabled>先上传照片</button>
+          <button class="ghost" id="resetButton" type="button">重置</button>
+        </div>
+        <div class="toast" id="toast">这是模拟结果，下一步再接真实模型接口。</div>
+      </div>
+    </div>
+
+    <script>
+      const preview = document.getElementById("preview");
+      const uploadCopy = document.getElementById("uploadCopy");
+      const galleryInput = document.getElementById("galleryInput");
+      const cameraInput = document.getElementById("cameraInput");
+      const beforeImage = document.getElementById("beforeImage");
+      const generateButton = document.getElementById("generateButton");
+      const resetButton = document.getElementById("resetButton");
+      const result = document.getElementById("result");
+      const toast = document.getElementById("toast");
+      const statusText = document.getElementById("statusText");
+      const styleSelect = document.getElementById("styleSelect");
+      const roomSelect = document.getElementById("roomSelect");
+      const resultBadge = document.getElementById("resultBadge");
+
+      let selectedUrl = "";
+
+      function syncBadge() {
+        resultBadge.textContent = `${styleSelect.value} · ${roomSelect.value}`;
+      }
+
+      function handleFile(file) {
+        if (!file) return;
+        if (selectedUrl) URL.revokeObjectURL(selectedUrl);
+        selectedUrl = URL.createObjectURL(file);
+
+        const image = new Image();
+        image.src = selectedUrl;
+        image.alt = "已上传的房间照片";
+        preview.querySelector("img")?.remove();
+        preview.appendChild(image);
+        beforeImage.src = selectedUrl;
+        uploadCopy.innerHTML = "<strong>已选择照片</strong><span>可以开始生成预览</span>";
+        generateButton.disabled = false;
+        generateButton.textContent = "生成搭配预览";
+        statusText.textContent = "已上传";
+        result.classList.remove("is-visible");
+        toast.classList.remove("is-visible");
+      }
+
+      function bindInput(input) {
+        input.addEventListener("change", (event) => {
+          handleFile(event.target.files?.[0]);
+        });
+      }
+
+      bindInput(galleryInput);
+      bindInput(cameraInput);
+      styleSelect.addEventListener("change", syncBadge);
+      roomSelect.addEventListener("change", syncBadge);
+
+      generateButton.addEventListener("click", () => {
+        if (!selectedUrl) return;
+        syncBadge();
+        generateButton.disabled = true;
+        generateButton.innerHTML = '<span class="spinner"></span>生成中';
+        statusText.textContent = "生成中";
+        result.classList.remove("is-visible");
+        toast.classList.remove("is-visible");
+
+        window.setTimeout(() => {
+          result.classList.add("is-visible");
+          toast.classList.add("is-visible");
+          generateButton.disabled = false;
+          generateButton.textContent = "重新生成预览";
+          statusText.textContent = "已完成";
+          result.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 1100);
+      });
+
+      resetButton.addEventListener("click", () => {
+        if (selectedUrl) URL.revokeObjectURL(selectedUrl);
+        selectedUrl = "";
+        preview.querySelector("img")?.remove();
+        beforeImage.src = "/original-pic.jpg";
+        uploadCopy.innerHTML = "<strong>上传房间照片</strong><span>支持 JPG、PNG、WEBP</span>";
+        galleryInput.value = "";
+        cameraInput.value = "";
+        result.classList.remove("is-visible");
+        toast.classList.remove("is-visible");
+        generateButton.disabled = true;
+        generateButton.textContent = "先上传照片";
+        statusText.textContent = "原型预览";
+      });
+
+      syncBadge();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1263 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>空间焕新 AI - H5 原型</title>
+    <style>
+      :root {
+        --ink: #17191d;
+        --muted: #6f747b;
+        --paper: #fbfaf7;
+        --panel: #ffffff;
+        --line: #e5e0d7;
+        --accent: #2d766f;
+        --accent-strong: #1e5c56;
+        --warm: #d5a15f;
+        --clay: #b56b5e;
+        --blue: #476f9d;
+        --shadow: 0 18px 42px rgba(30, 34, 40, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #d9d7d1;
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        letter-spacing: 0;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button,
+      label {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button {
+        border: 0;
+        cursor: pointer;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      .app {
+        width: min(100vw, 430px);
+        min-height: 100vh;
+        margin: 0 auto;
+        background: var(--paper);
+        box-shadow: 0 0 80px rgba(0, 0, 0, 0.18);
+      }
+
+      .topnav {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
+        border-bottom: 1px solid rgba(229, 224, 215, 0.84);
+        background: rgba(251, 250, 247, 0.94);
+        backdrop-filter: blur(16px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+        font-size: 16px;
+        font-weight: 900;
+      }
+
+      .brand-mark {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--warm));
+        box-shadow: 0 8px 20px rgba(45, 118, 111, 0.22);
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .nav-actions button,
+      .icon-button {
+        display: grid;
+        place-items: center;
+        min-width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .icon-button {
+        min-width: 40px;
+        background: #efede7;
+        color: var(--ink);
+        font-size: 23px;
+        line-height: 1;
+      }
+
+      .screen {
+        display: none;
+        min-height: calc(100vh - 60px);
+        padding: 18px 18px calc(env(safe-area-inset-bottom) + 24px);
+      }
+
+      .screen.active {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .hero {
+        padding: 14px 2px 18px;
+      }
+
+      .kicker {
+        margin: 0 0 8px;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 33px;
+        line-height: 1.14;
+        font-weight: 900;
+      }
+
+      h2 {
+        font-size: 25px;
+        line-height: 1.18;
+        font-weight: 900;
+      }
+
+      h3 {
+        font-size: 16px;
+        font-weight: 900;
+      }
+
+      .hero p:not(.kicker),
+      .helper {
+        margin-top: 13px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .upload-panel {
+        margin-top: 14px;
+        border: 1px dashed rgba(45, 118, 111, 0.38);
+        border-radius: 10px;
+        background: #eef6f3;
+        padding: 16px;
+      }
+
+      .upload-preview {
+        display: grid;
+        place-items: center;
+        min-height: 250px;
+        overflow: hidden;
+        border-radius: 8px;
+        background:
+          linear-gradient(rgba(20, 24, 29, 0.08), rgba(20, 24, 29, 0.08)),
+          url("https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=82") center / cover;
+        color: #fff;
+        text-align: center;
+      }
+
+      .upload-preview.has-image {
+        background: #111;
+      }
+
+      .upload-preview img {
+        width: 100%;
+        height: 250px;
+        object-fit: cover;
+      }
+
+      .upload-placeholder {
+        display: grid;
+        gap: 8px;
+        padding: 28px;
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.38);
+      }
+
+      .upload-placeholder strong {
+        font-size: 18px;
+      }
+
+      .upload-placeholder span {
+        font-size: 13px;
+      }
+
+      .actions,
+      .bottom-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .primary,
+      .secondary,
+      .upload-button {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        min-height: 52px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 900;
+        text-align: center;
+      }
+
+      .primary {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: 0 12px 26px rgba(45, 118, 111, 0.24);
+      }
+
+      .secondary,
+      .upload-button {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+      }
+
+      .upload-button input,
+      .reference-upload input {
+        display: none;
+      }
+
+      .tip-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 14px;
+      }
+
+      .tip-grid span {
+        display: grid;
+        place-items: center;
+        min-height: 46px;
+        padding: 8px 4px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .preview-stack {
+        position: relative;
+        height: 270px;
+        margin-top: 20px;
+      }
+
+      .preview-stack img {
+        position: absolute;
+        width: 72%;
+        height: 220px;
+        object-fit: cover;
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+      }
+
+      .preview-stack img:first-child {
+        left: 0;
+        top: 38px;
+        filter: saturate(0.86);
+      }
+
+      .preview-stack img:nth-child(2) {
+        right: 0;
+        top: 0;
+        border: 4px solid var(--paper);
+      }
+
+      .preview-stack span,
+      .preview-stack strong {
+        position: absolute;
+        z-index: 2;
+        padding: 7px 10px;
+        border-radius: 999px;
+        color: #fff;
+        font-size: 12px;
+      }
+
+      .preview-stack span {
+        left: 12px;
+        bottom: 28px;
+        background: rgba(24, 27, 31, 0.72);
+      }
+
+      .preview-stack strong {
+        right: 12px;
+        top: 14px;
+        background: var(--accent);
+      }
+
+      .page-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .step {
+        margin-top: 2px;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .photo-card,
+      .quality-panel,
+      .choice-card,
+      .style-card,
+      .reference-upload,
+      .scan-card,
+      .compare-card,
+      .info-panel {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .photo-card {
+        margin-top: 22px;
+        overflow: hidden;
+      }
+
+      .photo-card img {
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+      }
+
+      .quality-panel {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+        padding: 15px;
+      }
+
+      .quality-row,
+      .summary-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .quality-row strong,
+      .summary-row strong {
+        font-size: 14px;
+      }
+
+      .quality-row span,
+      .summary-row span {
+        color: var(--accent-strong);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .choice-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .choice-card {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        text-align: left;
+      }
+
+      .choice-card.active,
+      .style-card.active,
+      .room-pill.active {
+        border-color: rgba(45, 118, 111, 0.52);
+        background: #eef6f3;
+      }
+
+      .choice-card strong {
+        display: block;
+        font-size: 16px;
+      }
+
+      .choice-card span {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.45;
+      }
+
+      .radio {
+        width: 22px;
+        height: 22px;
+        border: 2px solid var(--line);
+        border-radius: 50%;
+      }
+
+      .active .radio {
+        border: 6px solid var(--accent);
+      }
+
+      .info-panel {
+        margin-top: 14px;
+        padding: 15px;
+      }
+
+      .info-panel span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .section {
+        margin-top: 24px;
+      }
+
+      .reference-upload {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+        padding: 13px;
+      }
+
+      .reference-upload span {
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .reference-upload strong {
+        color: var(--accent-strong);
+        font-size: 13px;
+      }
+
+      .style-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .style-card {
+        overflow: hidden;
+        padding: 0;
+        text-align: left;
+      }
+
+      .style-card img {
+        width: 100%;
+        aspect-ratio: 1.2 / 1;
+        object-fit: cover;
+      }
+
+      .style-card div {
+        padding: 10px;
+      }
+
+      .style-card strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .style-card span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.35;
+      }
+
+      .room-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .room-pill {
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 900;
+      }
+
+      .scan-card {
+        position: relative;
+        margin-top: 28px;
+        overflow: hidden;
+      }
+
+      .scan-card img {
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+      }
+
+      .scan-line {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 3px;
+        background: var(--accent);
+        box-shadow: 0 0 18px rgba(45, 118, 111, 0.9);
+        animation: scan 2s infinite ease-in-out;
+      }
+
+      @keyframes scan {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(390px); }
+        100% { transform: translateY(0); }
+      }
+
+      .process-list {
+        display: grid;
+        gap: 9px;
+        margin: 18px 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .process-list li {
+        padding: 12px 13px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .process-list li.active {
+        color: var(--accent-strong);
+        border-color: rgba(45, 118, 111, 0.34);
+        background: #eef6f3;
+      }
+
+      .process-list li.done::before {
+        content: "✓ ";
+        color: var(--accent);
+      }
+
+      .progress {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #ded9cf;
+      }
+
+      .progress span {
+        display: block;
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--accent);
+        transition: width 0.25s ease;
+      }
+
+      .scheme-tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      .scheme-tabs button {
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .scheme-tabs button.active {
+        border-color: rgba(45, 118, 111, 0.45);
+        background: #eef6f3;
+        color: var(--accent-strong);
+      }
+
+      .compare-card {
+        position: relative;
+        height: min(58vh, 520px);
+        margin-top: 12px;
+        overflow: hidden;
+      }
+
+      .compare-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .after-wrap {
+        position: absolute;
+        inset: 0;
+        width: 56%;
+        overflow: hidden;
+        border-right: 3px solid #fff;
+      }
+
+      .after-wrap img {
+        width: calc(100vw - 36px);
+        max-width: 394px;
+      }
+
+      .compare-label {
+        position: absolute;
+        z-index: 3;
+        top: 12px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.54);
+        color: #fff;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .compare-label.before {
+        right: 12px;
+      }
+
+      .compare-label.after {
+        left: 12px;
+        background: var(--accent);
+      }
+
+      #compareRange {
+        position: absolute;
+        z-index: 4;
+        left: 12px;
+        right: 12px;
+        bottom: 14px;
+        width: calc(100% - 24px);
+        accent-color: var(--accent);
+      }
+
+      .reference-summary {
+        display: grid;
+        grid-template-columns: 78px 1fr;
+        gap: 12px;
+        margin-top: 14px;
+        padding: 13px;
+      }
+
+      .reference-summary img {
+        width: 78px;
+        height: 78px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      .reference-summary strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .reference-summary span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(env(safe-area-inset-bottom) + 22px);
+        z-index: 30;
+        width: min(330px, calc(100vw - 44px));
+        padding: 13px 16px;
+        border-radius: 8px;
+        background: rgba(24, 27, 31, 0.9);
+        color: #fff;
+        font-size: 14px;
+        text-align: center;
+        transform: translate(-50%, 120px);
+        transition: transform 0.24s ease;
+      }
+
+      .toast.show {
+        transform: translate(-50%, 0);
+      }
+
+      @media (max-height: 720px) {
+        h1 {
+          font-size: 29px;
+        }
+
+        .upload-preview,
+        .upload-preview img {
+          min-height: 210px;
+          height: 210px;
+        }
+
+        .preview-stack {
+          height: 230px;
+        }
+
+        .preview-stack img {
+          height: 190px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <nav class="topnav">
+        <button class="brand" type="button" data-jump="home" aria-label="回到首页">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>空间焕新 AI</span>
+        </button>
+        <div class="nav-actions">
+          <button type="button" data-jump="examples">示例</button>
+          <button type="button" data-jump="styles">风格</button>
+          <button type="button" id="historyButton">历史</button>
+        </div>
+      </nav>
+
+      <section class="screen active" data-screen="home">
+        <div class="hero">
+          <p class="kicker">AI Interior Studio</p>
+          <h1>拍一张房间照，生成新的家具搭配</h1>
+          <p>保留墙体、窗户、地板和空间结构，只替换家具与软装风格。</p>
+        </div>
+
+        <section class="upload-panel">
+          <div class="upload-preview" id="homePreview">
+            <div class="upload-placeholder" id="uploadPlaceholder">
+              <strong>上传房间照片</strong>
+              <span>支持 JPG、PNG、WEBP</span>
+            </div>
+          </div>
+          <div class="actions">
+            <label class="primary upload-button">
+              上传照片
+              <input id="roomUpload" type="file" accept="image/*" />
+            </label>
+            <label class="secondary upload-button">
+              拍照
+              <input id="cameraUpload" type="file" accept="image/*" capture="environment" />
+            </label>
+          </div>
+        </section>
+
+        <div class="tip-grid">
+          <span>墙面完整</span>
+          <span>地面清晰</span>
+          <span>正视角</span>
+          <span>少反光</span>
+        </div>
+
+        <section class="preview-stack" id="examples">
+          <img src="https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=82" alt="原始房间示例" />
+          <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=82" alt="生成效果示例" />
+          <span>Before</span>
+          <strong>After</strong>
+        </section>
+      </section>
+
+      <section class="screen" data-screen="confirm">
+        <header class="page-head">
+          <button class="icon-button" type="button" data-back="home" aria-label="返回">‹</button>
+          <div>
+            <p class="step">1 / 5</p>
+            <h2>确认房间照片</h2>
+          </div>
+        </header>
+
+        <figure class="photo-card">
+          <img id="confirmImage" src="https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=82" alt="已上传的房间照片" />
+        </figure>
+
+        <section class="quality-panel">
+          <div class="quality-row"><strong>墙面完整</strong><span>可用</span></div>
+          <div class="quality-row"><strong>地面可见</strong><span>可用</span></div>
+          <div class="quality-row"><strong>主视角清晰</strong><span>良好</span></div>
+        </section>
+
+        <div class="bottom-actions">
+          <button class="secondary" type="button" data-back="home">重新选择</button>
+          <button class="primary" type="button" data-next="status">照片可用</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="status">
+        <header class="page-head">
+          <button class="icon-button" type="button" data-back="confirm" aria-label="返回">‹</button>
+          <div>
+            <p class="step">2 / 5</p>
+            <h2>这个房间现在是什么状态？</h2>
+          </div>
+        </header>
+
+        <section class="choice-list">
+          <button class="choice-card active" type="button" data-status="furnished">
+            <span>
+              <strong>有家具，需要先清空</strong>
+              <span>先移除原有家具和杂物，再生成新的家具方案。</span>
+            </span>
+            <i class="radio" aria-hidden="true"></i>
+          </button>
+          <button class="choice-card" type="button" data-status="empty">
+            <span>
+              <strong>空房间，直接布置</strong>
+              <span>跳过清空步骤，直接根据参考风格生成家具。</span>
+            </span>
+            <i class="radio" aria-hidden="true"></i>
+          </button>
+        </section>
+
+        <section class="info-panel">
+          <strong>结构保护</strong>
+          <span>生成时会尽量保持墙体、窗户、地板、天花板和空间透视不变。</span>
+        </section>
+
+        <div class="bottom-actions">
+          <button class="primary" type="button" data-next="style">下一步</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="style" id="styles">
+        <header class="page-head">
+          <button class="icon-button" type="button" data-back="status" aria-label="返回">‹</button>
+          <div>
+            <p class="step">3 / 5</p>
+            <h2>选择参考风格</h2>
+          </div>
+        </header>
+
+        <section class="section">
+          <h3>上传自己的参考图</h3>
+          <label class="reference-upload">
+            <span>选择一张喜欢的家居图</span>
+            <strong id="referenceName">未选择</strong>
+            <input id="referenceUpload" type="file" accept="image/*" />
+          </label>
+          <p class="helper">AI 学习整体色系、材质和家具气质，不照搬同款家具。</p>
+        </section>
+
+        <section class="section">
+          <h3>小红书热门模板</h3>
+          <div class="style-grid" id="styleGrid"></div>
+        </section>
+
+        <section class="section">
+          <h3>房间类型</h3>
+          <div class="room-grid" id="roomGrid"></div>
+        </section>
+
+        <div class="bottom-actions">
+          <button class="primary" type="button" id="generateButton">生成 3 个方案</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="processing">
+        <header class="page-head">
+          <div>
+            <p class="step">4 / 5</p>
+            <h2>AI 正在生成</h2>
+          </div>
+        </header>
+
+        <div class="scan-card">
+          <img id="processingImage" src="https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=82" alt="生成中的房间照片" />
+          <span class="scan-line" aria-hidden="true"></span>
+        </div>
+
+        <ol class="process-list" id="processList">
+          <li class="active">识别空间结构</li>
+          <li>判断家具区域</li>
+          <li>清除原有家具</li>
+          <li>提取参考图整体风格</li>
+          <li>生成 3 个家具方案</li>
+          <li>检查空间一致性</li>
+        </ol>
+
+        <div class="progress"><span id="progressBar"></span></div>
+        <p class="helper">原型演示约 4 秒，真实生成预计 20-60 秒。</p>
+      </section>
+
+      <section class="screen" data-screen="result">
+        <header class="page-head">
+          <button class="icon-button" type="button" data-back="style" aria-label="返回">‹</button>
+          <div>
+            <p class="step">5 / 5</p>
+            <h2 id="resultTitle">生成结果</h2>
+          </div>
+        </header>
+
+        <div class="scheme-tabs" id="schemeTabs"></div>
+
+        <section class="compare-card">
+          <img id="beforeImage" src="https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=82" alt="原图" />
+          <div class="after-wrap" id="afterWrap">
+            <img id="afterImage" src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=82" alt="生成图" />
+          </div>
+          <span class="compare-label after">效果</span>
+          <span class="compare-label before">原图</span>
+          <input id="compareRange" type="range" min="8" max="92" value="56" aria-label="前后对比滑杆" />
+        </section>
+
+        <section class="info-panel reference-summary">
+          <img id="referenceSummaryImage" src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=300&q=82" alt="参考图" />
+          <div>
+            <strong id="referenceSummaryTitle">参考奶油风模板</strong>
+            <span>已参考整体色系、家具气质和软装氛围；墙体、窗户、地板和空间透视尽量保持。</span>
+          </div>
+        </section>
+
+        <section class="info-panel">
+          <div class="summary-row"><strong>空间状态</strong><span id="resultStatus">已先清空家具</span></div>
+          <div class="summary-row"><strong>房间类型</strong><span id="resultRoom">客厅</span></div>
+        </section>
+
+        <div class="bottom-actions">
+          <button class="secondary" type="button" id="regenerateButton">重新生成</button>
+          <button class="primary" type="button" id="saveButton">保存图片</button>
+        </div>
+      </section>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+
+    <script>
+      const screens = [...document.querySelectorAll(".screen")];
+      const roomUpload = document.querySelector("#roomUpload");
+      const cameraUpload = document.querySelector("#cameraUpload");
+      const homePreview = document.querySelector("#homePreview");
+      const uploadPlaceholder = document.querySelector("#uploadPlaceholder");
+      const confirmImage = document.querySelector("#confirmImage");
+      const processingImage = document.querySelector("#processingImage");
+      const beforeImage = document.querySelector("#beforeImage");
+      const afterImage = document.querySelector("#afterImage");
+      const afterWrap = document.querySelector("#afterWrap");
+      const compareRange = document.querySelector("#compareRange");
+      const styleGrid = document.querySelector("#styleGrid");
+      const roomGrid = document.querySelector("#roomGrid");
+      const processList = document.querySelector("#processList");
+      const progressBar = document.querySelector("#progressBar");
+      const referenceUpload = document.querySelector("#referenceUpload");
+      const referenceName = document.querySelector("#referenceName");
+      const referenceSummaryImage = document.querySelector("#referenceSummaryImage");
+      const referenceSummaryTitle = document.querySelector("#referenceSummaryTitle");
+      const resultTitle = document.querySelector("#resultTitle");
+      const resultStatus = document.querySelector("#resultStatus");
+      const resultRoom = document.querySelector("#resultRoom");
+      const schemeTabs = document.querySelector("#schemeTabs");
+      const generateButton = document.querySelector("#generateButton");
+      const regenerateButton = document.querySelector("#regenerateButton");
+      const saveButton = document.querySelector("#saveButton");
+      const toast = document.querySelector("#toast");
+
+      const fallbackRoom = "https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=82";
+      const rooms = ["客厅", "卧室", "餐厅", "书房", "儿童房", "厨房"];
+      const styles = [
+        {
+          id: "cream",
+          name: "奶油风",
+          desc: "米白色系 / 圆润家具 / 柔软织物",
+          image: "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=700&q=82",
+          results: [
+            "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=82"
+          ]
+        },
+        {
+          id: "wood",
+          name: "原木风",
+          desc: "自然木色 / 清爽留白 / 温暖日常",
+          image: "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=700&q=82",
+          results: [
+            "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1616137422495-1e9e46e2aa77?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1600210491369-e753d80a41f3?auto=format&fit=crop&w=900&q=82"
+          ]
+        },
+        {
+          id: "wabi",
+          name: "侘寂风",
+          desc: "低饱和 / 肌理墙面 / 安静留白",
+          image: "https://images.unsplash.com/photo-1600210491369-e753d80a41f3?auto=format&fit=crop&w=700&q=82",
+          results: [
+            "https://images.unsplash.com/photo-1600210491369-e753d80a41f3?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=82"
+          ]
+        },
+        {
+          id: "vintage",
+          name: "中古风",
+          desc: "复古木作 / 皮革单椅 / 暖色灯光",
+          image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=700&q=82",
+          results: [
+            "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=82"
+          ]
+        },
+        {
+          id: "italian",
+          name: "意式极简",
+          desc: "大体块沙发 / 克制线条 / 石材质感",
+          image: "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=700&q=82",
+          results: [
+            "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=82"
+          ]
+        },
+        {
+          id: "modern",
+          name: "现代简约",
+          desc: "利落线条 / 中性色 / 干净耐看",
+          image: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=700&q=82",
+          results: [
+            "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1616137422495-1e9e46e2aa77?auto=format&fit=crop&w=900&q=82",
+            "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=900&q=82"
+          ]
+        }
+      ];
+
+      let selectedRoomImage = fallbackRoom;
+      let selectedStatus = "furnished";
+      let selectedStyle = styles[0];
+      let selectedRoom = rooms[0];
+      let selectedScheme = 0;
+      let customReferenceUrl = "";
+      let toastTimer = null;
+
+      init();
+
+      function init() {
+        renderStyles();
+        renderRooms();
+        bindNavigation();
+        bindUploads();
+        bindActions();
+        updateCompare();
+      }
+
+      function bindNavigation() {
+        document.querySelectorAll("[data-next]").forEach((button) => {
+          button.addEventListener("click", () => showScreen(button.dataset.next));
+        });
+        document.querySelectorAll("[data-back]").forEach((button) => {
+          button.addEventListener("click", () => showScreen(button.dataset.back));
+        });
+        document.querySelectorAll("[data-jump]").forEach((button) => {
+          button.addEventListener("click", () => {
+            if (button.dataset.jump === "home") showScreen("home");
+            if (button.dataset.jump === "examples") showScreen("home");
+            if (button.dataset.jump === "styles") showScreen("style");
+          });
+        });
+        document.querySelector("#historyButton").addEventListener("click", () => showToast("历史记录会在接入账号后开放"));
+      }
+
+      function bindUploads() {
+        [roomUpload, cameraUpload].forEach((input) => {
+          input.addEventListener("change", () => {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            selectedRoomImage = URL.createObjectURL(file);
+            homePreview.classList.add("has-image");
+            homePreview.innerHTML = `<img src="${selectedRoomImage}" alt="已上传房间图" />`;
+            syncRoomImages();
+            showScreen("confirm");
+          });
+        });
+
+        referenceUpload.addEventListener("change", () => {
+          const file = referenceUpload.files && referenceUpload.files[0];
+          if (!file) return;
+          if (customReferenceUrl.startsWith("blob:")) URL.revokeObjectURL(customReferenceUrl);
+          customReferenceUrl = URL.createObjectURL(file);
+          referenceName.textContent = "已选择";
+          showToast("已使用你上传的参考图");
+        });
+      }
+
+      function bindActions() {
+        document.querySelectorAll("[data-status]").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectedStatus = button.dataset.status;
+            document.querySelectorAll("[data-status]").forEach((item) => item.classList.remove("active"));
+            button.classList.add("active");
+          });
+        });
+
+        compareRange.addEventListener("input", updateCompare);
+        generateButton.addEventListener("click", runMockGeneration);
+        regenerateButton.addEventListener("click", runMockGeneration);
+        saveButton.addEventListener("click", () => showToast("原型中暂未保存，后续可接下载或相册"));
+      }
+
+      function renderStyles() {
+        styleGrid.innerHTML = styles.map((style) => `
+          <button class="style-card ${style.id === selectedStyle.id ? "active" : ""}" type="button" data-style="${style.id}">
+            <img src="${style.image}" alt="${style.name}" />
+            <div>
+              <strong>${style.name}</strong>
+              <span>${style.desc}</span>
+            </div>
+          </button>
+        `).join("");
+
+        styleGrid.querySelectorAll("[data-style]").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectedStyle = styles.find((style) => style.id === button.dataset.style) || styles[0];
+            customReferenceUrl = "";
+            referenceName.textContent = "未选择";
+            renderStyles();
+          });
+        });
+      }
+
+      function renderRooms() {
+        roomGrid.innerHTML = rooms.map((room) => `
+          <button class="room-pill ${room === selectedRoom ? "active" : ""}" type="button" data-room="${room}">
+            ${room}
+          </button>
+        `).join("");
+
+        roomGrid.querySelectorAll("[data-room]").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectedRoom = button.dataset.room;
+            renderRooms();
+          });
+        });
+      }
+
+      async function runMockGeneration() {
+        showScreen("processing");
+        progressBar.style.width = "0";
+
+        const items = [...processList.children];
+        items.forEach((item) => item.classList.remove("active", "done"));
+        items[2].textContent = selectedStatus === "empty" ? "空房间，已跳过清除家具" : "清除原有家具";
+
+        for (let index = 0; index < items.length; index += 1) {
+          const item = items[index];
+          item.classList.add("active");
+          progressBar.style.width = `${(index / items.length) * 100}%`;
+          await wait(620);
+          item.classList.remove("active");
+          item.classList.add("done");
+        }
+
+        progressBar.style.width = "100%";
+        await wait(240);
+        selectedScheme = 0;
+        renderResult();
+        showScreen("result");
+      }
+
+      function renderResult() {
+        resultTitle.textContent = `${selectedStyle.name} · 3 个方案`;
+        afterImage.src = selectedStyle.results[selectedScheme];
+        resultStatus.textContent = selectedStatus === "empty" ? "空房间直接布置" : "已先清空家具";
+        resultRoom.textContent = selectedRoom;
+
+        const referenceUrl = customReferenceUrl || selectedStyle.image;
+        referenceSummaryImage.src = referenceUrl;
+        referenceSummaryTitle.textContent = customReferenceUrl ? "参考用户上传图片" : `参考${selectedStyle.name}模板`;
+
+        schemeTabs.innerHTML = ["方案 A", "方案 B", "方案 C"].map((name, index) => `
+          <button class="${index === selectedScheme ? "active" : ""}" type="button" data-scheme="${index}">
+            ${name}
+          </button>
+        `).join("");
+
+        schemeTabs.querySelectorAll("[data-scheme]").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectedScheme = Number(button.dataset.scheme);
+            renderResult();
+          });
+        });
+
+        updateCompare();
+      }
+
+      function syncRoomImages() {
+        confirmImage.src = selectedRoomImage;
+        processingImage.src = selectedRoomImage;
+        beforeImage.src = selectedRoomImage;
+      }
+
+      function showScreen(name) {
+        screens.forEach((screen) => {
+          screen.classList.toggle("active", screen.dataset.screen === name);
+        });
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+
+      function updateCompare() {
+        afterWrap.style.width = `${compareRange.value}%`;
+      }
+
+      function wait(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>AI 焕然一居 - H5 交互原型</title>
+    <style>
+      :root {
+        --teal: #087f78;
+        --teal-2: #0a9a8e;
+        --mint: #85e9c4;
+        --cream: #f1ece5;
+        --paper: #fbf8f2;
+        --ink: #171717;
+        --text: #ffffff;
+        --muted: #686868;
+        --line: rgba(0, 0, 0, 0.12);
+        --shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
+        --safe-bottom: env(safe-area-inset-bottom, 0px);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #d8d2c9;
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+        letter-spacing: 0;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button,
+      label {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button {
+        border: 0;
+        cursor: pointer;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      .app {
+        position: relative;
+        width: min(100vw, 430px);
+        min-height: 100vh;
+        margin: 0 auto;
+        overflow-x: hidden;
+        background: var(--paper);
+        box-shadow: 0 0 90px rgba(0, 0, 0, 0.22);
+      }
+
+      .page {
+        display: none;
+        min-height: 100vh;
+        padding-bottom: calc(104px + var(--safe-bottom));
+      }
+
+      .page.active {
+        display: block;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      .serif {
+        font-family: "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
+        font-weight: 500;
+        letter-spacing: -0.03em;
+      }
+
+      .home {
+        min-height: 100vh;
+        color: var(--text);
+        background:
+          linear-gradient(180deg, rgba(20, 16, 12, 0.34) 0%, rgba(20, 16, 12, 0.08) 32%, rgba(16, 12, 9, 0.88) 100%),
+          url("https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=1200&q=88") center / cover;
+      }
+
+      .home-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: calc(env(safe-area-inset-top, 0px) + 34px) 26px 0;
+      }
+
+      .home-brand {
+        border: 0;
+        background: transparent;
+        color: #fff;
+        font-size: 30px;
+        line-height: 1.1;
+        text-align: left;
+      }
+
+      .home-actions {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        color: #fff;
+        font-size: 17px;
+        font-weight: 600;
+      }
+
+      .home-actions button {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        background: transparent;
+        color: inherit;
+      }
+
+      .divider {
+        width: 1px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.55);
+      }
+
+      .line-icon {
+        width: 25px;
+        height: 25px;
+        stroke: currentColor;
+        stroke-width: 2.2;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .home-copy {
+        display: grid;
+        gap: 16px;
+        padding: 58vh 32px 0;
+      }
+
+      .home-copy h1 {
+        max-width: 330px;
+        color: #fff;
+        font-size: 42px;
+        line-height: 1.18;
+      }
+
+      .home-copy p {
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 18px;
+        line-height: 1.5;
+      }
+
+      .hero-cta {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        width: 100%;
+        min-height: 64px;
+        margin-top: 14px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--teal), var(--teal-2));
+        color: #fff;
+        font-size: 21px;
+        font-weight: 800;
+        box-shadow: 0 14px 34px rgba(6, 110, 103, 0.32);
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: grid;
+        grid-template-columns: 44px 1fr 54px;
+        align-items: center;
+        gap: 10px;
+        min-height: calc(env(safe-area-inset-top, 0px) + 64px);
+        padding: calc(env(safe-area-inset-top, 0px) + 14px) 18px 12px;
+        color: #fff;
+        background: rgba(17, 17, 17, 0.2);
+      }
+
+      .topbar.light {
+        color: var(--ink);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        background: rgba(251, 248, 242, 0.92);
+        backdrop-filter: blur(18px);
+      }
+
+      .topbar h2 {
+        font-size: 20px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .nav-text {
+        justify-self: end;
+        background: transparent;
+        color: inherit;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .back-btn {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        background: transparent;
+        color: inherit;
+      }
+
+      .camera-page {
+        min-height: 100vh;
+        overflow: hidden;
+        color: #fff;
+        background:
+          linear-gradient(180deg, rgba(12, 10, 8, 0.38), rgba(12, 10, 8, 0.08) 38%, rgba(12, 10, 8, 0.86) 100%),
+          url("https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=1200&q=88") center / cover;
+      }
+
+      .camera-stage {
+        position: relative;
+        min-height: calc(100vh - 64px);
+        padding: 80px 20px 190px;
+      }
+
+      .capture-frame {
+        position: absolute;
+        inset: 122px 20px 196px;
+        border: 2px dashed rgba(255, 255, 255, 0.88);
+        border-radius: 16px;
+      }
+
+      .corner {
+        position: absolute;
+        width: 34px;
+        height: 34px;
+        border-color: #fff;
+      }
+
+      .corner.tl { left: -3px; top: -3px; border-left: 5px solid; border-top: 5px solid; border-radius: 13px 0 0 0; }
+      .corner.tr { right: -3px; top: -3px; border-right: 5px solid; border-top: 5px solid; border-radius: 0 13px 0 0; }
+      .corner.bl { left: -3px; bottom: -3px; border-left: 5px solid; border-bottom: 5px solid; border-radius: 0 0 0 13px; }
+      .corner.br { right: -3px; bottom: -3px; border-right: 5px solid; border-bottom: 5px solid; border-radius: 0 0 13px 0; }
+
+      .vertical-guide {
+        position: absolute;
+        top: 100px;
+        bottom: 142px;
+        width: 1px;
+        background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.8), rgba(255,255,255,0.2));
+        opacity: 0.7;
+      }
+
+      .vertical-guide.left { left: 34%; }
+      .vertical-guide.right { right: 34%; }
+
+      .floor-guide {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 64%;
+        border-top: 2px dashed var(--mint);
+      }
+
+      .guide-bubble {
+        position: absolute;
+        top: 116px;
+        left: 50%;
+        display: inline-flex;
+        align-items: center;
+        gap: 13px;
+        min-height: 48px;
+        max-width: 310px;
+        padding: 0 22px;
+        border-radius: 999px;
+        background: rgba(40, 38, 35, 0.78);
+        color: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        transform: translateX(-50%);
+        white-space: nowrap;
+      }
+
+      .focus-mark {
+        width: 23px;
+        height: 23px;
+        border: 2px solid var(--mint);
+        border-radius: 5px;
+        box-shadow: inset 0 0 0 7px rgba(40, 38, 35, 0.78);
+      }
+
+      .good-pill {
+        position: absolute;
+        left: 50%;
+        bottom: 246px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 52px;
+        padding: 0 26px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #35aa81, #1e9b73);
+        color: #fff;
+        font-size: 19px;
+        font-weight: 800;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        box-shadow: var(--shadow);
+      }
+
+      .good-pill svg {
+        width: 25px;
+        height: 25px;
+        fill: #fff;
+      }
+
+      .camera-tip {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 216px;
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .level {
+        position: absolute;
+        left: 50%;
+        bottom: 154px;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        transform: translateX(-50%);
+      }
+
+      .level i {
+        display: block;
+        width: 2px;
+        height: 10px;
+        background: rgba(255, 255, 255, 0.75);
+      }
+
+      .level .bar {
+        width: 68px;
+        height: 2px;
+        background: var(--mint);
+      }
+
+      .camera-controls {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(28px + var(--safe-bottom));
+        display: grid;
+        grid-template-columns: 1fr 106px 1fr;
+        align-items: end;
+        padding: 0 38px;
+      }
+
+      .album,
+      .example-btn {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        background: transparent;
+        color: #fff;
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .album-thumb {
+        width: 50px;
+        height: 50px;
+        border: 2px solid #fff;
+        border-radius: 10px;
+        background: url("https://images.unsplash.com/photo-1600210491369-e753d80a41f3?auto=format&fit=crop&w=200&q=80") center / cover;
+      }
+
+      .example-circle {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        border: 2px solid #fff;
+        border-radius: 999px;
+        font-size: 24px;
+      }
+
+      .shutter {
+        justify-self: center;
+        width: 78px;
+        height: 78px;
+        border: 5px solid #fff;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: inset 0 0 0 5px rgba(0, 0, 0, 0.18);
+      }
+
+      .hidden-input {
+        display: none;
+      }
+
+      .content-page {
+        min-height: 100vh;
+        background: var(--paper);
+      }
+
+      .content {
+        display: grid;
+        gap: 18px;
+        padding: 18px 18px 28px;
+      }
+
+      .section-title {
+        display: grid;
+        gap: 8px;
+        padding: 10px 2px 0;
+      }
+
+      .section-title h2 {
+        font-size: 28px;
+        line-height: 1.2;
+      }
+
+      .section-title p,
+      .card p,
+      .muted {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.55;
+      }
+
+      .card {
+        overflow: hidden;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .card-body {
+        display: grid;
+        gap: 8px;
+        padding: 16px;
+      }
+
+      .card h3 {
+        font-size: 20px;
+        line-height: 1.25;
+      }
+
+      .room-preview {
+        position: relative;
+        min-height: 300px;
+        background:
+          linear-gradient(rgba(0,0,0,0.08), rgba(0,0,0,0.38)),
+          url("https://images.unsplash.com/photo-1600210491369-e753d80a41f3?auto=format&fit=crop&w=900&q=88") center / cover;
+      }
+
+      .detect-box {
+        position: absolute;
+        border: 2px dashed var(--teal);
+        border-radius: 14px;
+        background: rgba(8, 127, 120, 0.1);
+      }
+
+      .detect-box.a { left: 44px; bottom: 42px; width: 126px; height: 58px; }
+      .detect-box.b { right: 44px; bottom: 78px; width: 68px; height: 98px; }
+
+      .status-chip {
+        position: absolute;
+        left: 14px;
+        top: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 34px;
+        border-radius: 999px;
+        padding: 0 13px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .status-chip::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--teal);
+      }
+
+      .primary,
+      .secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 52px;
+        border-radius: 8px;
+        padding: 0 18px;
+        font-size: 17px;
+        font-weight: 800;
+      }
+
+      .primary {
+        background: linear-gradient(135deg, var(--teal), var(--teal-2));
+        color: #fff;
+      }
+
+      .secondary {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+      }
+
+      .row-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .flow {
+        display: none;
+      }
+
+      .flow.active {
+        display: grid;
+        gap: 18px;
+      }
+
+      .tags {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding: 2px 0 4px;
+        scrollbar-width: none;
+      }
+
+      .tags::-webkit-scrollbar {
+        display: none;
+      }
+
+      .tag {
+        flex: 0 0 auto;
+        min-height: 36px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        border-radius: 999px;
+        background: #fff;
+        padding: 0 15px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .tag.active {
+        border-color: var(--teal);
+        background: var(--teal);
+        color: #fff;
+      }
+
+      .masonry {
+        column-count: 2;
+        column-gap: 12px;
+      }
+
+      .pin {
+        break-inside: avoid;
+        display: block;
+        width: 100%;
+        overflow: hidden;
+        margin: 0 0 12px;
+        padding: 0;
+        border: 0;
+        border-radius: 18px;
+        background: #fff;
+        color: inherit;
+        text-align: left;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .pin-img {
+        width: 100%;
+        background-position: center;
+        background-size: cover;
+      }
+
+      .pin-body {
+        display: grid;
+        gap: 6px;
+        padding: 12px;
+      }
+
+      .pin strong {
+        font-size: 15px;
+        line-height: 1.32;
+      }
+
+      .pin span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .process {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .process li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 44px;
+        border-radius: 12px;
+        background: #fff;
+        padding: 0 14px;
+        color: var(--muted);
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .process li::before {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: #cfc7bd;
+      }
+
+      .process li.active,
+      .process li.done {
+        color: var(--ink);
+      }
+
+      .process li.active::before,
+      .process li.done::before {
+        background: var(--teal);
+      }
+
+      .progress {
+        height: 8px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #ded6cc;
+      }
+
+      .progress span {
+        display: block;
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--teal);
+        transition: width 0.25s ease;
+      }
+
+      .compare {
+        position: relative;
+        min-height: 410px;
+        overflow: hidden;
+        border-radius: 18px;
+        background: url("https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=88") center / cover;
+        box-shadow: var(--shadow);
+      }
+
+      .compare-before {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 42%;
+        border-right: 3px solid #fff;
+        background: url("https://images.unsplash.com/photo-1600210491369-e753d80a41f3?auto=format&fit=crop&w=900&q=88") center / cover;
+      }
+
+      .history-list,
+      .mine-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .history-item,
+      .mine-item {
+        display: grid;
+        grid-template-columns: 92px 1fr;
+        gap: 12px;
+        align-items: center;
+        border-radius: 18px;
+        background: #fff;
+        padding: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      }
+
+      .history-thumb {
+        width: 92px;
+        height: 92px;
+        border-radius: 14px;
+        object-fit: cover;
+      }
+
+      .mine-item {
+        grid-template-columns: 1fr auto;
+        min-height: 62px;
+        padding: 0 16px;
+        font-weight: 800;
+      }
+
+      .bottom-nav {
+        position: fixed;
+        left: 50%;
+        bottom: 0;
+        z-index: 50;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        width: min(100vw, 430px);
+        padding: 10px 18px calc(10px + var(--safe-bottom));
+        border-radius: 18px 18px 0 0;
+        background: rgba(247, 241, 233, 0.94);
+        box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.13);
+        backdrop-filter: blur(18px);
+        transform: translateX(-50%);
+      }
+
+      .bottom-nav button {
+        display: grid;
+        justify-items: center;
+        gap: 5px;
+        min-height: 60px;
+        background: transparent;
+        color: #5f5f5f;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .bottom-nav button.active {
+        color: var(--teal);
+      }
+
+      .bottom-nav svg {
+        width: 27px;
+        height: 27px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: calc(108px + var(--safe-bottom));
+        z-index: 80;
+        width: min(340px, calc(100vw - 42px));
+        padding: 13px 16px;
+        border-radius: 12px;
+        background: rgba(17, 17, 17, 0.92);
+        color: #fff;
+        font-size: 14px;
+        text-align: center;
+        transform: translate(-50%, 130px);
+        transition: transform 0.22s ease;
+      }
+
+      .toast.show {
+        transform: translate(-50%, 0);
+      }
+
+      @media (max-height: 760px) {
+        .home-copy {
+          padding-top: 50vh;
+        }
+
+        .home-copy h1 {
+          font-size: 36px;
+        }
+
+        .camera-stage {
+          padding-top: 58px;
+        }
+
+        .capture-frame {
+          inset: 100px 20px 170px;
+        }
+
+        .good-pill {
+          bottom: 222px;
+        }
+
+        .camera-tip {
+          bottom: 194px;
+        }
+
+        .level {
+          bottom: 136px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="page active home" data-page="home">
+        <header class="home-top">
+          <button class="home-brand serif" type="button" data-page-go="home">AI 焕然一居</button>
+          <div class="home-actions">
+            <button type="button" id="searchButton">
+              <svg class="line-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+              <span>搜索</span>
+            </button>
+            <span class="divider"></span>
+            <button type="button" data-page-go="mine">
+              <svg class="line-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4.5 14.5-4.5 16 0"></path></svg>
+              <span>我的</span>
+            </button>
+          </div>
+        </header>
+
+        <section class="home-copy">
+          <h1 class="serif">看看你家<br />换个风格会怎样</h1>
+          <p>保留空间结构，生成 3 个家具搭配方案</p>
+          <button class="hero-cta" type="button" data-start>
+            <svg class="line-icon" viewBox="0 0 24 24"><path d="M4 8h4l2-3h4l2 3h4v11H4z"></path><circle cx="12" cy="13.5" r="3.2"></circle></svg>
+            <span>上传我家照片</span>
+          </button>
+        </section>
+      </section>
+
+      <section class="page camera-page" data-page="camera">
+        <header class="topbar">
+          <button class="back-btn" type="button" data-page-go="home" aria-label="返回">
+            <svg class="line-icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"></path></svg>
+          </button>
+          <h2>拍摄房间</h2>
+          <button class="nav-text" type="button" id="cameraExample">示例</button>
+        </header>
+
+        <section class="camera-stage">
+          <div class="capture-frame">
+            <span class="corner tl"></span>
+            <span class="corner tr"></span>
+            <span class="corner bl"></span>
+            <span class="corner br"></span>
+          </div>
+          <span class="vertical-guide left"></span>
+          <span class="vertical-guide right"></span>
+          <span class="floor-guide"></span>
+          <div class="guide-bubble"><span class="focus-mark"></span>让墙角和地面线落在虚线范围内</div>
+          <div class="good-pill">
+            <svg viewBox="0 0 24 24"><path d="M9.4 16.6 4.9 12l1.8-1.8 2.7 2.7 7.8-7.8L19 6.9z"></path></svg>
+            <span>构图良好，可以拍摄</span>
+          </div>
+          <p class="camera-tip">保持手机水平，露出墙面和地面</p>
+          <div class="level" aria-hidden="true">
+            <i></i><i></i><i></i><span class="bar"></span><i></i><i></i><i></i>
+          </div>
+          <div class="camera-controls">
+            <label class="album">
+              <span class="album-thumb"></span>
+              <span>相册</span>
+              <input id="albumInput" class="hidden-input" type="file" accept="image/*" />
+            </label>
+            <button class="shutter" type="button" data-flow-go="confirm" aria-label="拍摄"></button>
+            <button class="example-btn" type="button" id="helpButton">
+              <span class="example-circle">?</span>
+              <span>示例</span>
+            </button>
+          </div>
+        </section>
+      </section>
+
+      <section class="page content-page" data-page="create">
+        <div class="flow active" data-flow="confirm">
+          <header class="topbar light">
+            <button class="back-btn" type="button" data-page-go="camera" aria-label="返回"><svg class="line-icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"></path></svg></button>
+            <h2>确认照片</h2>
+            <button class="nav-text" type="button" data-page-go="camera">重拍</button>
+          </header>
+          <div class="content">
+            <div class="room-preview">
+              <span class="status-chip">照片质量良好</span>
+            </div>
+            <article class="card">
+              <div class="card-body">
+                <h3>空间结构可识别</h3>
+                <p>墙面、地面、窗户和透视关系清晰。下一步由 AI 判断并清除原有家具。</p>
+              </div>
+            </article>
+            <div class="row-actions">
+              <button class="secondary" type="button" data-page-go="camera">重新选择</button>
+              <button class="primary" type="button" data-flow-go="detect">开始识别</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow" data-flow="detect">
+          <header class="topbar light">
+            <button class="back-btn" type="button" data-flow-go="confirm" aria-label="返回"><svg class="line-icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"></path></svg></button>
+            <h2>AI 空间判断</h2>
+            <span></span>
+          </header>
+          <div class="content">
+            <div class="room-preview">
+              <span class="status-chip">检测到旧家具</span>
+              <span class="detect-box a"></span>
+              <span class="detect-box b"></span>
+            </div>
+            <article class="card">
+              <div class="card-body">
+                <h3>一键清除原有家具</h3>
+                <p>移除沙发、柜体和杂物，保持墙体、窗户、地面、天花板与空间透视不变。前期只做家具摆放。</p>
+              </div>
+            </article>
+            <button class="primary" type="button" data-flow-go="style">清除家具并选择风格</button>
+          </div>
+        </div>
+
+        <div class="flow" data-flow="style">
+          <header class="topbar light">
+            <button class="back-btn" type="button" data-flow-go="detect" aria-label="返回"><svg class="line-icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"></path></svg></button>
+            <h2>选择风格</h2>
+            <button class="nav-text" type="button" data-page-go="inspiration">灵感</button>
+          </header>
+          <div class="content">
+            <div class="section-title">
+              <h2 class="serif">选择家具搭配方向</h2>
+              <p>AI 学习整体色系、材质和家具气质，不改变硬装结构。</p>
+            </div>
+            <div class="tags" id="styleTags"></div>
+            <div class="masonry" id="stylePickGrid"></div>
+            <button class="primary" type="button" id="generateButton">生成 3 个家具方案</button>
+          </div>
+        </div>
+
+        <div class="flow" data-flow="processing">
+          <header class="topbar light">
+            <span></span>
+            <h2>AI 正在生成</h2>
+            <span></span>
+          </header>
+          <div class="content">
+            <div class="room-preview"><span class="status-chip">锁定空间结构</span></div>
+            <ol class="process" id="processList">
+              <li class="active">识别墙面、地面和透视</li>
+              <li>清除原有家具</li>
+              <li>生成家具与软装方案</li>
+              <li>检查结构一致性</li>
+            </ol>
+            <div class="progress"><span id="progressBar"></span></div>
+          </div>
+        </div>
+
+        <div class="flow" data-flow="result">
+          <header class="topbar light">
+            <button class="back-btn" type="button" data-flow-go="style" aria-label="返回"><svg class="line-icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"></path></svg></button>
+            <h2>生成结果</h2>
+            <button class="nav-text" type="button" id="saveButton">保存</button>
+          </header>
+          <div class="content">
+            <div class="tags">
+              <button class="tag active" type="button">方案 A</button>
+              <button class="tag" type="button">方案 B</button>
+              <button class="tag" type="button">方案 C</button>
+            </div>
+            <div class="compare">
+              <span class="compare-before"></span>
+              <span class="status-chip">新家具 / 原空间</span>
+            </div>
+            <article class="card">
+              <div class="card-body">
+                <h3>硬装结构已保持</h3>
+                <p>原有家具已清除，当前方案只替换家具、灯具和软装搭配。</p>
+              </div>
+            </article>
+            <div class="row-actions">
+              <button class="secondary" type="button" data-flow-go="style">重新生成</button>
+              <button class="primary" type="button" id="saveAgainButton">保存图片</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page content-page" data-page="inspiration">
+        <header class="topbar light">
+          <span></span>
+          <h2>灵感</h2>
+          <button class="nav-text" type="button" id="inspireSearch">搜索</button>
+        </header>
+        <div class="content">
+          <div class="section-title">
+            <h2 class="serif">风格模板</h2>
+            <p>瀑布流浏览搭配灵感，选择标签快速筛选。</p>
+          </div>
+          <div class="tags" id="inspireTags"></div>
+          <div class="masonry" id="inspireGrid"></div>
+        </div>
+      </section>
+
+      <section class="page content-page" data-page="history">
+        <header class="topbar light">
+          <span></span>
+          <h2>历史</h2>
+          <button class="nav-text" type="button" id="clearHistory">清空</button>
+        </header>
+        <div class="content">
+          <div class="section-title">
+            <h2 class="serif">最近生成</h2>
+            <p>保存过的方案会在这里继续查看、对比和二次生成。</p>
+          </div>
+          <div class="history-list">
+            <article class="history-item">
+              <img class="history-thumb" src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=260&q=82" alt="奶油风客厅" />
+              <div><h3>奶油风客厅</h3><p class="muted">3 个家具方案 · 今天</p></div>
+            </article>
+            <article class="history-item">
+              <img class="history-thumb" src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=260&q=82" alt="原木风卧室" />
+              <div><h3>原木风卧室</h3><p class="muted">已保存对比图 · 昨天</p></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="page content-page" data-page="mine">
+        <header class="topbar light">
+          <span></span>
+          <h2>我的</h2>
+          <span></span>
+        </header>
+        <div class="content">
+          <div class="section-title">
+            <h2 class="serif">我的空间</h2>
+            <p>管理空间档案、收藏模板和生成记录。</p>
+          </div>
+          <div class="mine-list">
+            <div class="mine-item"><span>历史生成</span><span class="muted">12</span></div>
+            <div class="mine-item"><span>收藏风格</span><span class="muted">8</span></div>
+            <div class="mine-item"><span>空间档案</span><span class="muted">客厅、卧室</span></div>
+            <div class="mine-item"><span>硬装模式</span><span class="muted">后续开放</span></div>
+          </div>
+        </div>
+      </section>
+
+      <nav class="bottom-nav" aria-label="底部导航">
+        <button class="active" type="button" data-page-go="home">
+          <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5 10.5V21h14V10.5"></path><path d="M9 21v-6h6v6"></path></svg>
+          <span>首页</span>
+        </button>
+        <button type="button" data-page-go="inspiration">
+          <svg viewBox="0 0 24 24"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M8 14a6 6 0 1 1 8 0c-1.2.9-1.5 1.8-1.5 3h-5c0-1.2-.3-2.1-1.5-3Z"></path></svg>
+          <span>灵感</span>
+        </button>
+        <button type="button" data-page-go="history">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l4 2"></path></svg>
+          <span>历史</span>
+        </button>
+        <button type="button" data-page-go="mine">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4.5 14.5-4.5 16 0"></path></svg>
+          <span>我的</span>
+        </button>
+      </nav>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+
+    <script>
+      const pages = [...document.querySelectorAll(".page")];
+      const flows = [...document.querySelectorAll(".flow")];
+      const bottomButtons = [...document.querySelectorAll(".bottom-nav [data-page-go]")];
+      const toast = document.querySelector("#toast");
+      const progressBar = document.querySelector("#progressBar");
+      const processList = document.querySelector("#processList");
+      let toastTimer = null;
+      let activeTag = "全部";
+
+      const tags = ["全部", "奶油风", "原木风", "侘寂风", "中古风", "现代简约"];
+      const inspirations = [
+        ["奶油风", "晨光奶油客厅", "圆润沙发和低饱和软装", "https://images.unsplash.com/photo-1618220179428-22790b461013?auto=format&fit=crop&w=520&q=84", 238],
+        ["原木风", "木色开放客厅", "清爽留白与温暖木作", "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=520&q=84", 190],
+        ["中古风", "复古皮革角落", "暖光、深木色和艺术挂画", "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=520&q=84", 250],
+        ["侘寂风", "安静肌理墙面", "低饱和材质和自然留白", "https://images.unsplash.com/photo-1600210491369-e753d80a41f3?auto=format&fit=crop&w=520&q=84", 210],
+        ["现代简约", "利落浅色套间", "干净线条和中性色家具", "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=520&q=84", 230],
+        ["奶油风", "柔软亲子客厅", "布艺、地毯和温柔光线", "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=520&q=84", 205],
+        ["原木风", "自然餐客一体", "木桌、浅墙和绿植", "https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=520&q=84", 260],
+        ["中古风", "暖棕阅读区", "单椅、边柜和复古灯", "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=520&q=84", 196]
+      ];
+
+      init();
+
+      function init() {
+        renderTags(document.querySelector("#inspireTags"));
+        renderTags(document.querySelector("#styleTags"));
+        renderMasonry(document.querySelector("#inspireGrid"));
+        renderMasonry(document.querySelector("#stylePickGrid"), true);
+        bindNavigation();
+        bindFlow();
+        document.querySelector("[data-start]").addEventListener("click", () => showPage("camera"));
+        document.querySelector("#albumInput").addEventListener("change", () => {
+          showPage("create");
+          showFlow("confirm");
+          showToast("已选择相册图片");
+        });
+        document.querySelector("#generateButton").addEventListener("click", runGeneration);
+        document.querySelector("#searchButton").addEventListener("click", () => showToast("搜索会用于查找风格、历史和模板"));
+        document.querySelector("#inspireSearch").addEventListener("click", () => showToast("可搜索风格、房间类型和家具关键词"));
+        document.querySelector("#cameraExample").addEventListener("click", () => showToast("示例：手机水平，墙面和地面都完整入画"));
+        document.querySelector("#helpButton").addEventListener("click", () => showToast("让墙角、地面线尽量贴合虚线指引"));
+        document.querySelector("#clearHistory").addEventListener("click", () => showToast("原型中暂不清空历史"));
+        document.querySelector("#saveButton").addEventListener("click", () => showToast("已保存到历史"));
+        document.querySelector("#saveAgainButton").addEventListener("click", () => showToast("已保存图片"));
+      }
+
+      function bindNavigation() {
+        document.querySelectorAll("[data-page-go]").forEach((button) => {
+          button.addEventListener("click", () => showPage(button.dataset.pageGo));
+        });
+      }
+
+      function bindFlow() {
+        document.querySelectorAll("[data-flow-go]").forEach((button) => {
+          button.addEventListener("click", () => {
+            if (button.dataset.flowGo === "confirm") {
+              showPage("create");
+            }
+            showFlow(button.dataset.flowGo);
+          });
+        });
+      }
+
+      function renderTags(target) {
+        target.innerHTML = tags.map((tag) => `
+          <button class="tag ${tag === activeTag ? "active" : ""}" type="button" data-tag="${tag}">${tag}</button>
+        `).join("");
+        target.querySelectorAll("[data-tag]").forEach((button) => {
+          button.addEventListener("click", () => {
+            activeTag = button.dataset.tag;
+            renderTags(document.querySelector("#inspireTags"));
+            renderTags(document.querySelector("#styleTags"));
+            renderMasonry(document.querySelector("#inspireGrid"));
+            renderMasonry(document.querySelector("#stylePickGrid"), true);
+          });
+        });
+      }
+
+      function renderMasonry(target, selectable = false) {
+        const list = activeTag === "全部" ? inspirations : inspirations.filter((item) => item[0] === activeTag);
+        target.innerHTML = list.map((item) => `
+          <button class="pin" type="button">
+            <div class="pin-img" style="height:${item[4]}px;background-image:url('${item[3]}')"></div>
+            <div class="pin-body">
+              <strong>${item[1]}</strong>
+              <span>${item[0]} · ${item[2]}</span>
+            </div>
+          </button>
+        `).join("");
+        if (selectable) {
+          target.querySelectorAll(".pin").forEach((pin) => {
+            pin.addEventListener("click", () => showToast("已选为参考风格"));
+          });
+        }
+      }
+
+      function showPage(name) {
+        pages.forEach((page) => page.classList.toggle("active", page.dataset.page === name));
+        bottomButtons.forEach((button) => {
+          const page = button.dataset.pageGo;
+          button.classList.toggle("active", page === name || (name === "camera" || name === "create") && page === "home");
+        });
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+
+      function showFlow(name) {
+        flows.forEach((flow) => flow.classList.toggle("active", flow.dataset.flow === name));
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+
+      async function runGeneration() {
+        showFlow("processing");
+        const items = [...processList.children];
+        items.forEach((item) => item.className = "");
+        progressBar.style.width = "0";
+
+        for (let index = 0; index < items.length; index += 1) {
+          items[index].classList.add("active");
+          progressBar.style.width = `${(index / items.length) * 100}%`;
+          await wait(540);
+          items[index].classList.remove("active");
+          items[index].classList.add("done");
+        }
+
+        progressBar.style.width = "100%";
+        await wait(260);
+        showFlow("result");
+      }
+
+      function wait(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+      }
+    </script>
+  </body>
+</html>

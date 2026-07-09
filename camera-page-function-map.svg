@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844" fill="none">
+  <title>AI 焕然一居拍照页功能图</title>
+  <defs>
+    <linearGradient id="room" x1="67" y1="120" x2="334" y2="638" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DED7CA"/>
+      <stop offset="0.48" stop-color="#BEB7AA"/>
+      <stop offset="1" stop-color="#7D766B"/>
+    </linearGradient>
+    <linearGradient id="floor" x1="195" y1="520" x2="195" y2="702" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8E887D"/>
+      <stop offset="1" stop-color="#47433D"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000000" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+
+  <rect width="390" height="844" rx="30" fill="#111316"/>
+  <rect x="10" y="10" width="370" height="824" rx="26" fill="#17191D"/>
+
+  <g clip-path="url(#clipScreen)">
+    <rect x="18" y="18" width="354" height="808" rx="22" fill="#14171A"/>
+    <rect x="18" y="18" width="354" height="808" fill="url(#room)"/>
+    <path d="M18 520H372V826H18V520Z" fill="url(#floor)"/>
+    <path d="M18 520L195 333L372 520" fill="#D8D0C2" opacity="0.44"/>
+    <path d="M18 18H372V520H18V18Z" fill="#DCD5C8" opacity="0.34"/>
+    <rect x="18" y="18" width="354" height="808" fill="#0B0D0E" opacity="0.18"/>
+
+    <path d="M79 166H311V497H79V166Z" stroke="#FAFAF6" stroke-width="2.5" stroke-dasharray="9 7"/>
+    <rect x="88" y="176" width="214" height="309" rx="2" stroke="#2D766F" stroke-width="3"/>
+    <text x="195" y="164" text-anchor="middle" fill="#FAFAF6" font-size="12" font-weight="700">主墙面框</text>
+
+    <path d="M18 90L195 333L372 90" stroke="#F6EFE3" stroke-width="1.4" stroke-opacity="0.65"/>
+    <path d="M18 270L195 333L372 270" stroke="#F6EFE3" stroke-width="1.2" stroke-opacity="0.72"/>
+    <path d="M18 520L195 333L372 520" stroke="#F6EFE3" stroke-width="1.6" stroke-opacity="0.78"/>
+    <path d="M58 826L195 333L332 826" stroke="#F6EFE3" stroke-width="1.2" stroke-opacity="0.5"/>
+    <path d="M18 588L195 333L372 588" stroke="#F6EFE3" stroke-width="1" stroke-opacity="0.42"/>
+    <path d="M18 666L195 333L372 666" stroke="#F6EFE3" stroke-width="1" stroke-opacity="0.32"/>
+
+    <line x1="47" y1="521" x2="343" y2="521" stroke="#E9B15F" stroke-width="3"/>
+    <text x="326" y="512" fill="#FFE4B7" font-size="12" font-weight="800">地面线</text>
+
+    <circle cx="195" cy="333" r="18" fill="#111316" fill-opacity="0.34"/>
+    <circle cx="195" cy="333" r="6" fill="#F2C36B"/>
+    <line x1="177" y1="333" x2="213" y2="333" stroke="#F2C36B" stroke-width="2"/>
+    <line x1="195" y1="315" x2="195" y2="351" stroke="#F2C36B" stroke-width="2"/>
+    <text x="195" y="306" text-anchor="middle" fill="#FFF5DF" font-size="12" font-weight="800">中心消失点</text>
+
+    <rect x="45" y="108" width="94" height="30" rx="15" fill="#111316" fill-opacity="0.58"/>
+    <text x="92" y="128" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="800">透视收敛线</text>
+
+    <rect x="30" y="54" width="42" height="42" rx="12" fill="#FFFFFF" fill-opacity="0.14"/>
+    <path d="M55 66L43 75L55 84" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="195" y="77" text-anchor="middle" fill="#FFFFFF" font-size="17" font-weight="900">拍摄房间</text>
+    <rect x="275" y="58" width="74" height="30" rx="15" fill="#2D766F"/>
+    <text x="312" y="78" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="900">校准中</text>
+
+    <rect x="30" y="642" width="330" height="74" rx="14" fill="#2B1A18" fill-opacity="0.88" filter="url(#softShadow)"/>
+    <circle cx="57" cy="679" r="15" fill="#D35E4F"/>
+    <path d="M57 669V681" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="57" cy="689" r="2" fill="#FFFFFF"/>
+    <text x="83" y="672" fill="#FFFFFF" font-size="15" font-weight="900">不合格</text>
+    <text x="83" y="695" fill="#FFD6CF" font-size="13" font-weight="700">主墙面未正对，地面线偏斜，请水平对齐</text>
+
+    <rect x="18" y="730" width="354" height="96" fill="#111316" fill-opacity="0.74"/>
+    <rect x="37" y="756" width="48" height="48" rx="10" fill="#D8D0C2" stroke="#FFFFFF" stroke-opacity="0.5"/>
+    <path d="M45 790L61 772L76 792" stroke="#6F747B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="195" cy="780" r="32" fill="#FFFFFF"/>
+    <circle cx="195" cy="780" r="24" fill="#FFFFFF" stroke="#17191D" stroke-width="3"/>
+    <rect x="303" y="758" width="50" height="44" rx="12" fill="#FFFFFF" fill-opacity="0.12"/>
+    <path d="M319 780H337M328 771V789" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"/>
+    <text x="195" y="821" text-anchor="middle" fill="#FFFFFF" fill-opacity="0.82" font-size="12" font-weight="700">拍摄前先让墙面框与实际主墙对齐</text>
+  </g>
+
+  <rect x="18" y="18" width="354" height="808" rx="22" stroke="#FFFFFF" stroke-opacity="0.12"/>
+
+  <defs>
+    <clipPath id="clipScreen">
+      <rect x="18" y="18" width="354" height="808" rx="22"/>
+    </clipPath>
+  </defs>
+</svg>

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>AI 家居焕新原型</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="screen active" data-screen="home">
+        <header class="topbar">
+          <span class="brand-dot" aria-hidden="true"></span>
+          <button class="icon-button" type="button" aria-label="历史记录">≡</button>
+        </header>
+
+        <section class="hero">
+          <p class="kicker">AI Interior Studio</p>
+          <h1>拍一张房间照，生成新的家具搭配</h1>
+          <p>保持墙体、窗户、地板和空间结构不变，先清除原家具，再生成多套风格方案。</p>
+        </section>
+
+        <section class="preview-stack" aria-label="效果预览">
+          <img src="https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=900&q=80" alt="原始客厅照片" />
+          <img src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=80" alt="AI 家具搭配效果" />
+          <span>Before</span>
+          <strong>After</strong>
+        </section>
+
+        <div class="primary-actions">
+          <button class="primary-button" type="button" data-go="capture">开始拍照</button>
+          <label class="secondary-button">
+            上传照片
+            <input id="uploadInput" type="file" accept="image/*" />
+          </label>
+        </div>
+
+        <section class="mini-flow">
+          <span>识别空间</span>
+          <span>清除家具</span>
+          <span>生成方案</span>
+        </section>
+      </section>
+
+      <section class="screen camera-screen" data-screen="capture">
+        <video id="cameraVideo" autoplay playsinline muted></video>
+        <img id="cameraFallback" src="https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=80" alt="拍照参考画面" />
+
+        <div class="camera-shade" aria-hidden="true"></div>
+        <div class="guide-frame" aria-hidden="true">
+          <span class="corner tl"></span>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <span class="corner br"></span>
+          <span class="guide-line vertical left"></span>
+          <span class="guide-line vertical right"></span>
+          <span class="guide-line horizon"></span>
+          <span class="floor-line"></span>
+        </div>
+
+        <header class="camera-head">
+          <button class="ghost-icon" type="button" data-go="home" aria-label="返回">‹</button>
+          <p>让墙角和地面线落在虚线内</p>
+          <button class="ghost-icon" type="button" id="toggleGuide" aria-label="切换引导">⌗</button>
+        </header>
+
+        <section class="shoot-tips">
+          <span>横平竖直</span>
+          <span>露出墙角</span>
+          <span>减少遮挡</span>
+        </section>
+
+        <footer class="camera-actions">
+          <label class="small-capture">
+            相册
+            <input id="cameraUploadInput" type="file" accept="image/*" />
+          </label>
+          <button class="shutter" type="button" id="captureButton" aria-label="拍照"></button>
+          <label class="small-capture">
+            系统拍照
+            <input id="nativeCameraInput" type="file" accept="image/*" capture="environment" />
+          </label>
+        </footer>
+      </section>
+
+      <section class="screen" data-screen="confirm">
+        <header class="page-header">
+          <button class="icon-button" type="button" data-go="capture" aria-label="返回">‹</button>
+          <div>
+            <p class="kicker">Step 1</p>
+            <h2>确认房间照片</h2>
+          </div>
+        </header>
+
+        <figure class="photo-card">
+          <img id="selectedPhoto" src="https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=80" alt="已选择的房间照片" />
+        </figure>
+
+        <section class="quality-panel">
+          <div>
+            <strong>构图检测</strong>
+            <span id="qualityText">墙面、地面和主视角完整，可用于生成</span>
+          </div>
+          <meter min="0" max="100" value="86"></meter>
+        </section>
+
+        <div class="bottom-actions">
+          <button class="secondary-button button-like" type="button" data-go="capture">重拍</button>
+          <button class="primary-button" type="button" data-go="configure">下一步</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="configure">
+        <header class="page-header">
+          <button class="icon-button" type="button" data-go="confirm" aria-label="返回">‹</button>
+          <div>
+            <p class="kicker">Step 2</p>
+            <h2>选择空间和风格</h2>
+          </div>
+        </header>
+
+        <section class="section-block">
+          <h3>房间类型</h3>
+          <div class="choice-grid compact" id="roomTypeList"></div>
+        </section>
+
+        <section class="section-block">
+          <h3>风格模板</h3>
+          <div class="style-list" id="styleList"></div>
+        </section>
+
+        <section class="option-row">
+          <div>
+            <strong>保留硬装结构</strong>
+            <span>墙体、窗户、地板、天花板不重绘</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" checked />
+            <span></span>
+          </label>
+        </section>
+
+        <button class="primary-button sticky-button" type="button" id="startGenerate">生成家具方案</button>
+      </section>
+
+      <section class="screen processing-screen" data-screen="processing">
+        <header class="page-header">
+          <button class="icon-button" type="button" data-go="configure" aria-label="返回">‹</button>
+          <div>
+            <p class="kicker">Step 3</p>
+            <h2>AI 正在生成</h2>
+          </div>
+        </header>
+
+        <div class="scan-card">
+          <img id="processingPhoto" src="https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=80" alt="生成中的房间照片" />
+          <span class="scan-line" aria-hidden="true"></span>
+        </div>
+
+        <ol class="process-list" id="processList">
+          <li class="active">识别墙面、地板和家具位置</li>
+          <li>清除原有家具和杂物</li>
+          <li>按照风格模板搭配新家具</li>
+          <li>检查空间结构和光影一致性</li>
+        </ol>
+
+        <div class="progress-track"><span id="progressBar"></span></div>
+      </section>
+
+      <section class="screen result-screen" data-screen="result">
+        <header class="page-header">
+          <button class="icon-button" type="button" data-go="configure" aria-label="返回">‹</button>
+          <div>
+            <p class="kicker">Result</p>
+            <h2 id="resultTitle">现代简约方案</h2>
+          </div>
+        </header>
+
+        <section class="compare-card" id="compareCard">
+          <img class="before-image" id="beforeImage" src="https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=900&q=80" alt="原图" />
+          <div class="after-wrap" id="afterWrap">
+            <img class="after-image" id="afterImage" src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=900&q=80" alt="生成效果图" />
+          </div>
+          <span class="compare-label before">原图</span>
+          <span class="compare-label after">效果</span>
+          <input id="compareRange" type="range" min="8" max="92" value="54" aria-label="前后对比滑杆" />
+        </section>
+
+        <div class="scheme-tabs" id="schemeTabs"></div>
+
+        <section class="shopping-card">
+          <h3>Mock 家具清单</h3>
+          <ul id="furnitureList"></ul>
+        </section>
+
+        <div class="bottom-actions">
+          <button class="secondary-button button-like" type="button" id="regenerateButton">重新生成</button>
+          <button class="primary-button" type="button" id="saveButton">保存方案</button>
+        </div>
+      </section>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
