@@ -975,6 +975,7 @@
 const IMG = (seed, w=800, h=1000) => `https://picsum.photos/seed/${seed}/${w}/${h}`;
 const ASSET = path => location.protocol === 'file:' ? `../${path}` : `/${path}`;
 const MODEL_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/generate' : '/api/generate';
+const ROOM_ANALYZE_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/analyze-room' : '/api/analyze-room';
 const STYLE_IMAGE_COUNTS = {
   cream: 5,
   wood: 5,
@@ -1147,7 +1148,8 @@ const state = {
   stack: [],
   photo: null,           // dataURL or picsum url of the user's captured/uploaded room
   roomMask: null,        // generated inpainting mask for furniture placement area
-  layoutPlan: null,      // deterministic furniture layout plan for model prompting
+  layoutPlan: null,      // visual-model furniture layout plan, with a local fallback
+  roomAnalysis: null,    // cached room analysis for the current uploaded photo
   compStatus: 'good',    // camera composition status
   selectedStyle: null,
   customStyle: null,   // { img: dataURL } uploaded reference image for style-select page
@@ -1203,8 +1205,7 @@ function createLayoutPlan(width, height){
       'one low TV console or media cabinet on the opposite wall if there is a usable wall',
       'one floor lamp or side lamp near the sofa',
       'one restrained wall artwork on an empty wall',
-      'one ceiling pendant or refined ceiling light only inside the existing ceiling-light area',
-      'soft curtains may be added only around the existing window edge',
+      'do not edit the ceiling light or curtains until the room vision plan marks them safe',
       'keep the far window or balcony area open',
       'keep a clear walking path from the camera side toward the far opening',
       'do not place matching sofas on both side walls',
@@ -1215,9 +1216,7 @@ function createLayoutPlan(width, height){
       rugTable: { x: 0.30, y: 0.66, w: 0.42, h: 0.24, role: 'rug and single coffee table centered in front of the sofa, scaled to the floor perspective' },
       mediaConsole: { x: 0.10, y: 0.57, w: 0.24, h: 0.16, role: 'low TV console or media cabinet along the opposite left wall, kept shallow and aligned with wall perspective' },
       wallArt: { x: 0.13, y: 0.34, w: 0.20, h: 0.16, role: 'one restrained framed artwork on the empty left wall above the console' },
-      lighting: { x: 0.44, y: 0.10, w: 0.14, h: 0.11, role: 'one refined pendant light or ceiling lamp centered on the existing ceiling light area' },
-      decor: { x: 0.47, y: 0.51, w: 0.14, h: 0.20, role: 'slim floor lamp or plant beside the sofa, not in the walkway' },
-      curtain: { x: 0.33, y: 0.27, w: 0.36, h: 0.24, role: 'soft sheer curtains only around the existing window or balcony frame, never covering the opening fully' }
+      decor: { x: 0.47, y: 0.51, w: 0.14, h: 0.20, role: 'slim floor lamp or plant beside the sofa, not in the walkway' }
     },
     forbiddenZones: {
       farOpening: { x: 0.30, y: 0.18, w: 0.42, h: 0.36, role: 'window, balcony, door and far circulation area must stay open; only light curtains at edges are allowed' },
@@ -1241,13 +1240,13 @@ function roundRectPath(ctx, x, y, w, h, r){
   ctx.closePath();
 }
 
-function createFurnitureMask(imgSrc){
+function createFurnitureMask(imgSrc, suppliedPlan=null){
   return new Promise((resolve) => {
     const image = new Image();
     image.onload = () => {
       const width = image.naturalWidth || 900;
       const height = image.naturalHeight || 1400;
-      const plan = createLayoutPlan(width, height);
+      const plan = suppliedPlan || createLayoutPlan(width, height);
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
@@ -1255,12 +1254,19 @@ function createFurnitureMask(imgSrc){
       ctx.fillStyle = '#000';
       ctx.fillRect(0, 0, width, height);
 
-      const zones = plan.zones;
+      const zones = plan.zones || {};
       ctx.fillStyle = '#fff';
 
-      ['rugTable', 'sofa', 'mediaConsole', 'wallArt', 'lighting', 'decor', 'curtain'].forEach(key => {
-        const zone = zones[key];
-        roundRectPath(ctx, zone.x * width, zone.y * height, zone.w * width, zone.h * height, width * (key === 'lighting' || key === 'wallArt' ? 0.035 : 0.06));
+      Object.entries(zones).forEach(([key, zone]) => {
+        if(!zone || !Number.isFinite(Number(zone.x)) || !Number.isFinite(Number(zone.y)) || !Number.isFinite(Number(zone.w)) || !Number.isFinite(Number(zone.h))) return;
+        roundRectPath(ctx, Number(zone.x) * width, Number(zone.y) * height, Number(zone.w) * width, Number(zone.h) * height, width * (key === 'lighting' || key === 'wallArt' ? 0.025 : 0.045));
+        ctx.fill();
+      });
+
+      ctx.fillStyle = '#000';
+      Object.values(plan.forbiddenZones || {}).forEach(zone => {
+        if(!zone || !Number.isFinite(Number(zone.x)) || !Number.isFinite(Number(zone.y)) || !Number.isFinite(Number(zone.w)) || !Number.isFinite(Number(zone.h))) return;
+        roundRectPath(ctx, Number(zone.x) * width, Number(zone.y) * height, Number(zone.w) * width, Number(zone.h) * height, width * 0.02);
         ctx.fill();
       });
 
@@ -1276,6 +1282,7 @@ async function setRoomPhoto(img, { preserveReference=false } = {}){
   const layout = await createFurnitureMask(img);
   state.roomMask = layout.mask;
   state.layoutPlan = layout.plan;
+  state.roomAnalysis = null;
   state.generatedPlans = null;
   state.generationMeta = null;
   state.resultTab = 'A';
@@ -1286,6 +1293,31 @@ async function setRoomPhoto(img, { preserveReference=false } = {}){
   }
   state.preserveReferenceForNextRoomUpload = false;
   nav('style');
+}
+
+function resizeImageDataUrl(dataUrl, maxDimension=1600, quality=0.88){
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => {
+      const sourceWidth = image.naturalWidth || image.width;
+      const sourceHeight = image.naturalHeight || image.height;
+      const scale = Math.min(1, maxDimension / Math.max(sourceWidth, sourceHeight));
+      if(scale >= 0.999 && /^data:image\/(jpeg|webp)/i.test(dataUrl)){
+        resolve(dataUrl);
+        return;
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+      canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    image.onerror = () => resolve(dataUrl);
+    image.src = dataUrl;
+  });
 }
 
 let toastTimer;
@@ -1319,9 +1351,10 @@ function localMockGenerationPayload(){
 
 async function requestModelGeneration(){
   const style = STYLES.find(s=>s.id===state.selectedStyle);
-  const styleRef = state.customStyle
+  await ensureRoomAnalysis();
+  const styleRef = state.selectedStyle === 'custom' && state.customStyle
     ? state.customStyle.img
-    : (style ? styleImage(style.id, 0) : null);
+    : null;
   const payload = {
     roomImage: state.photo || IMG('camera-room-9',800,1400),
     roomMask: state.roomMask,
@@ -1329,6 +1362,8 @@ async function requestModelGeneration(){
     styleId: state.selectedStyle,
     styleName: style ? style.name : '自定义参考风格',
     styleReferenceImage: styleRef,
+    styleMode: styleRef ? 'custom_reference' : 'preset_json',
+    copyReferenceComposition: false,
     outputs: 1,
     preserveStructure: true,
     generationMode: 'layout_guided_inpaint'
@@ -1344,6 +1379,28 @@ async function requestModelGeneration(){
   }catch(err){
     console.warn('model api unavailable, using local fallback', err);
     return localMockGenerationPayload();
+  }
+}
+
+async function ensureRoomAnalysis(){
+  if(state.roomAnalysis && state.roomAnalysis.layoutPlan) return state.roomAnalysis;
+  try{
+    const res = await fetch(ROOM_ANALYZE_API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ roomImage: state.photo })
+    });
+    if(!res.ok) throw new Error(`room analysis ${res.status}`);
+    const analysis = await res.json();
+    if(!analysis.layoutPlan) throw new Error('room analysis returned no layout plan');
+    const layout = await createFurnitureMask(state.photo, analysis.layoutPlan);
+    state.roomAnalysis = analysis;
+    state.layoutPlan = layout.plan;
+    state.roomMask = layout.mask;
+    return analysis;
+  }catch(err){
+    console.warn('room analysis unavailable, using conservative local layout', err);
+    return null;
   }
 }
 
@@ -1855,7 +1912,8 @@ document.getElementById('fileInput').addEventListener('change', function(e){
   const preserveReference = state.preserveReferenceForNextRoomUpload;
   const reader = new FileReader();
   reader.onload = async function(ev){
-    await setRoomPhoto(ev.target.result, { preserveReference });
+    const image = await resizeImageDataUrl(ev.target.result, 1600, 0.88);
+    await setRoomPhoto(image, { preserveReference });
   };
   reader.readAsDataURL(file);
   e.target.value = '';
@@ -1869,7 +1927,8 @@ document.getElementById('cameraInput').addEventListener('change', function(e){
   const preserveReference = state.preserveReferenceForNextRoomUpload;
   const reader = new FileReader();
   reader.onload = async function(ev){
-    await setRoomPhoto(ev.target.result, { preserveReference });
+    const image = await resizeImageDataUrl(ev.target.result, 1600, 0.88);
+    await setRoomPhoto(image, { preserveReference });
   };
   reader.readAsDataURL(file);
   e.target.value = '';
@@ -1879,8 +1938,9 @@ document.getElementById('styleFileInput').addEventListener('change', function(e)
   const file = e.target.files[0];
   if(!file){ return; }
   const reader = new FileReader();
-  reader.onload = function(ev){
-    state.customStyle = { img: ev.target.result };
+  reader.onload = async function(ev){
+    const image = await resizeImageDataUrl(ev.target.result, 1200, 0.86);
+    state.customStyle = { img: image };
     state.selectedStyle = 'custom';
     render();
     showToast('已上传参考图，将按此风格生成');

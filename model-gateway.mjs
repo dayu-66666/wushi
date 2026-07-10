@@ -10,17 +10,83 @@ const PROTOTYPE_HTML = process.env.PROTOTYPE_HTML || path.join(ROOT, "ui-preview
 loadDotEnv(path.join(ROOT, ".env.local"));
 loadDotEnv(path.join(ROOT, ".env"));
 
-const STYLE_PROMPTS = {
-  cream: "warm cream palette, low rounded sofa, boucle or cotton-linen upholstery, pale wood coffee table, soft rug, calm residential interior, refined editorial lighting",
-  wood: "natural oak wood, linen textures, low-profile sofa, simple wood coffee table, airy daylight, minimal Japanese Scandinavian home",
-  wabi: "wabi-sabi interior, low linen sofa, raw wood or stone coffee table, textured neutral rug, quiet negative space, handmade ceramics",
-  midcentury: "mid-century modern furniture, walnut wood, slim legs, sculptural lamps, vintage but refined, controlled warm accents",
-  modern: "modern minimal interior, clean low sofa, simple geometric coffee table, low saturation palette, uncluttered luxury",
-  italian: "Italian quiet luxury interior, refined sofa, travertine or marble coffee table, leather accents, brushed metal details, restrained elegance",
-  song: "Song dynasty inspired interior, pale wood, sparse low furniture, elegant Chinese objects, quiet balance, restrained textiles",
-  oldmoney: "old money interior, dark wood, leather or wool upholstery, brass lamp, wool rug, timeless library mood",
-  custom: "match the uploaded reference image style while preserving the original room structure"
+const STYLE_SPECS = {
+  cream: {
+    palette: ["warm ivory", "oatmeal", "soft beige", "pale natural wood"],
+    materials: ["boucle", "cotton-linen", "matte pale wood", "soft woven rug"],
+    furnitureLanguage: ["low rounded sofa", "soft corners", "quiet tactile surfaces", "light visual weight"],
+    atmosphere: "gentle, bright, calm and residential with soft editorial daylight",
+    decor: ["restrained abstract art", "ceramic objects", "one slim floor lamp", "minimal greenery"],
+    avoid: ["high-saturation colors", "sharp aggressive geometry", "ornate carving", "glossy luxury styling"]
+  },
+  wood: {
+    palette: ["natural oak", "warm white", "linen beige", "soft charcoal accents"],
+    materials: ["oak", "ash wood", "linen", "paper or woven lighting"],
+    furnitureLanguage: ["low-profile sofa", "simple solid-wood table", "slender joinery", "Japanese-Scandinavian restraint"],
+    atmosphere: "airy, natural, practical and quietly warm",
+    decor: ["paper lamp", "wood-framed art", "linen textiles", "small green plant"],
+    avoid: ["orange varnished wood", "heavy carved furniture", "cold chrome", "busy decoration"]
+  },
+  wabi: {
+    palette: ["chalk white", "stone grey", "raw timber", "earthy taupe"],
+    materials: ["raw wood", "stone", "limewash texture", "coarse linen", "handmade ceramics"],
+    furnitureLanguage: ["low linen sofa", "monolithic coffee table", "organic irregular edges", "quiet negative space"],
+    atmosphere: "still, tactile, imperfect and meditative",
+    decor: ["single branch arrangement", "handmade vessel", "textural art", "soft indirect light"],
+    avoid: ["polished glamour", "symmetrical showroom styling", "bright colors", "excessive accessories"]
+  },
+  midcentury: {
+    palette: ["walnut", "warm cream", "olive", "controlled rust accents"],
+    materials: ["walnut wood", "textured wool", "leather accents", "aged brass"],
+    furnitureLanguage: ["slim tapered legs", "sculptural lounge forms", "compact proportions", "clean vintage lines"],
+    atmosphere: "cultivated, warm and characterful without looking retro-themed",
+    decor: ["sculptural lamp", "graphic art", "small vintage object", "restrained color accent"],
+    avoid: ["theme-park retro", "too many accent colors", "bulky contemporary sectional", "random antiques"]
+  },
+  modern: {
+    palette: ["warm white", "light grey", "charcoal", "natural wood accent"],
+    materials: ["matte fabric", "fine-grain wood", "clear glass", "subtle stone"],
+    furnitureLanguage: ["clean low sofa", "precise geometry", "integrated storage", "thin visual profiles"],
+    atmosphere: "functional, calm, uncluttered and quietly premium",
+    decor: ["one large artwork", "architectural floor lamp", "minimal object grouping", "tonal rug"],
+    avoid: ["sterile office feeling", "excessive black", "decorative clutter", "futuristic gimmicks"]
+  },
+  italian: {
+    palette: ["warm greige", "travertine beige", "dark brown", "muted metal"],
+    materials: ["travertine", "soft leather", "fine wool", "brushed metal", "dark timber"],
+    furnitureLanguage: ["refined generous sofa", "sculptural low table", "precise tailoring", "quiet luxury proportions"],
+    atmosphere: "restrained, polished and substantial without ostentation",
+    decor: ["statement floor lamp", "large tonal artwork", "stone object", "subtle metallic detail"],
+    avoid: ["gold overload", "glossy marble everywhere", "hotel-lobby staging", "ornate luxury"]
+  },
+  song: {
+    palette: ["rice paper white", "pale timber", "ink grey", "celadon accent"],
+    materials: ["pale wood", "linen", "paper", "celadon ceramic", "dark restrained metal"],
+    furnitureLanguage: ["low balanced furniture", "fine timber lines", "elegant Chinese proportions", "generous breathing space"],
+    atmosphere: "scholarly, serene, light and distinctly Eastern",
+    decor: ["single ceramic vessel", "ink-inspired art", "paper lantern", "restrained natural branch"],
+    avoid: ["literal palace decor", "red-and-gold symbolism", "dense antique display", "heavy traditional carving"]
+  },
+  oldmoney: {
+    palette: ["deep walnut", "warm ivory", "olive", "oxblood accent", "aged brass"],
+    materials: ["dark timber", "wool", "leather", "aged brass", "woven rug"],
+    furnitureLanguage: ["timeless tailored sofa", "classic but restrained silhouettes", "solid proportions", "collected character"],
+    atmosphere: "settled, cultured, warm and quietly established",
+    decor: ["traditional art in simple frames", "brass reading lamp", "books", "one patterned textile"],
+    avoid: ["costume-like mansion styling", "excessive darkness", "gold ornament", "crowded antique shop feeling"]
+  },
+  custom: {
+    palette: ["colors extracted from the uploaded reference"],
+    materials: ["materials extracted from the uploaded reference"],
+    furnitureLanguage: ["furniture language extracted from the uploaded reference"],
+    atmosphere: "match the reference mood without copying its room composition",
+    decor: ["decor language extracted from the uploaded reference"],
+    avoid: ["copying the reference room architecture", "copying the reference camera angle", "copying the reference furniture positions"]
+  }
 };
+
+const ROOM_ANALYSIS_CACHE = new Map();
+const STYLE_ANALYSIS_CACHE = new Map();
 
 const LAYOUT_RULES = [
   "Design the room like a professional interior designer, not a random collage.",
@@ -34,7 +100,8 @@ const LAYOUT_RULES = [
   "Coffee table must sit on the rug and align with the sofa. Rug must sit flat on the floor and follow the room perspective.",
   "All furniture must be grounded on the existing floor plane, correct scale, correct perspective, no floating objects, no oversized furniture, no tiny furniture.",
   "Leave the back window/balcony area visually open. Do not place a seating group directly in front of the balcony door unless there is clear space to pass.",
-  "Use the selected style only for furniture silhouette, materials, color palette, textiles, and atmosphere; do not copy a different room layout from the reference style.",
+  "Use the selected style only for color palette, tone, materials, furniture silhouette, textiles, decor language, and atmosphere.",
+  "Never copy the composition, camera angle, room architecture, or furniture coordinates of a preset style image. Composition may be copied only when an explicit user instruction requests it.",
   "The result should feel like a plausible real apartment staging plan."
 ];
 
@@ -95,6 +162,268 @@ function describeLayoutPlan(plan) {
     Array.isArray(plan.placementRules) && plan.placementRules.length ? `Placement rules: ${plan.placementRules.join("; ")}.` : "",
     Array.isArray(plan.fixedStructure) && plan.fixedStructure.length ? `Fixed structure that must not be edited: ${plan.fixedStructure.join(", ")}.` : ""
   ].filter(Boolean).join(" ");
+}
+
+function styleSpecToPrompt(spec) {
+  const value = spec || STYLE_SPECS.custom;
+  const list = (key) => Array.isArray(value[key]) ? value[key].filter(Boolean).join(", ") : "";
+  return [
+    list("palette") ? `palette: ${list("palette")}` : "",
+    list("materials") ? `materials: ${list("materials")}` : "",
+    list("furnitureLanguage") ? `furniture language: ${list("furnitureLanguage")}` : "",
+    value.atmosphere ? `atmosphere: ${value.atmosphere}` : "",
+    list("decor") ? `decor language: ${list("decor")}` : "",
+    list("avoid") ? `avoid: ${list("avoid")}` : "",
+    "style influence applies to color, tone, material, furniture form and mood only; it does not determine room composition"
+  ].filter(Boolean).join("; ");
+}
+
+function imageCacheKey(value) {
+  if (typeof value !== "string") return "";
+  return `${value.length}:${value.slice(0, 80)}:${value.slice(-80)}`;
+}
+
+function parseJsonOutput(value) {
+  const text = String(value || "").trim().replace(/^```(?:json)?\s*/i, "").replace(/```$/i, "").trim();
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start === -1 || end <= start) throw new Error("vision model returned no JSON object");
+  return JSON.parse(text.slice(start, end + 1));
+}
+
+function clamp(value, min = 0, max = 1) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return null;
+  return Math.min(max, Math.max(min, number));
+}
+
+function normalizeBox(value) {
+  if (!value || typeof value !== "object") return null;
+  let x = clamp(value.x ?? value.x_min);
+  let y = clamp(value.y ?? value.y_min);
+  let w = clamp(value.w ?? value.width);
+  let h = clamp(value.h ?? value.height);
+  if (w === null && value.x_max !== undefined && x !== null) w = clamp(Number(value.x_max) - x);
+  if (h === null && value.y_max !== undefined && y !== null) h = clamp(Number(value.y_max) - y);
+  if ([x, y, w, h].some(item => item === null) || w < 0.035 || h < 0.035) return null;
+  w = Math.min(w, 1 - x);
+  h = Math.min(h, 1 - y);
+  return { x, y, w, h };
+}
+
+function normalizeRoomPlan(raw) {
+  const sourceZones = raw?.zones && typeof raw.zones === "object" ? raw.zones : {};
+  const sourceForbidden = Array.isArray(raw?.forbiddenZones)
+    ? Object.fromEntries(raw.forbiddenZones.map((value, index) => [value?.id || `opening${index + 1}`, value]))
+    : (raw?.forbiddenZones && typeof raw.forbiddenZones === "object" ? raw.forbiddenZones : {});
+  const zoneRoles = {
+    sofa: "one main sofa close to and parallel with the best usable wall",
+    rugTable: "one rug and one coffee table centered in front of the sofa",
+    mediaConsole: "one shallow low media console on the wall opposite the sofa",
+    wallArt: "one restrained framed artwork flat on a genuinely empty wall",
+    decor: "one slim floor lamp or plant beside the sofa, outside circulation",
+    lighting: "one ceiling light only around the existing ceiling-light point",
+    curtain: "sheer curtain fabric only at the existing window edges"
+  };
+  const zones = {};
+  for (const [key, role] of Object.entries(zoneRoles)) {
+    const box = normalizeBox(sourceZones[key]);
+    if (!box) continue;
+    zones[key] = { ...box, role: String(sourceZones[key]?.role || role) };
+  }
+
+  const forbiddenZones = {};
+  for (const [key, value] of Object.entries(sourceForbidden)) {
+    const box = normalizeBox(value);
+    if (!box) continue;
+    forbiddenZones[key] = { ...box, role: String(value?.role || `${key} must stay clear`) };
+  }
+
+  if (!zones.sofa || !zones.rugTable) {
+    throw new Error("vision plan did not identify a safe sofa and rug/table layout");
+  }
+  const uniqueBoxes = new Set(Object.values(zones).map(zone => [zone.x, zone.y, zone.w, zone.h].map(value => Number(value).toFixed(3)).join(":")));
+  if (Object.keys(zones).length >= 3 && uniqueBoxes.size <= 1) {
+    throw new Error("vision plan returned placeholder furniture coordinates");
+  }
+
+  return {
+    version: 2,
+    source: "vision-plan",
+    roomType: String(raw?.roomType || "living_room"),
+    cameraView: String(raw?.cameraView || "uploaded room photo"),
+    designIntent: "place a complete, coherent living-room furniture set in the photographed room while preserving all hard architecture",
+    fixedStructure: ["walls", "floor", "ceiling", "doors", "windows", "balcony", "openings", "vents", "switches", "outlets", "perspective", "camera angle"],
+    placementRules: Array.isArray(raw?.placementRules) ? raw.placementRules.slice(0, 10).map(String) : [],
+    zones,
+    forbiddenZones,
+    analysisSummary: String(raw?.analysisSummary || "")
+  };
+}
+
+function normalizeStyleSpec(raw) {
+  const toList = (value, fallback) => Array.isArray(value) && value.length
+    ? value.slice(0, 8).map(String)
+    : fallback;
+  return {
+    palette: toList(raw?.palette, STYLE_SPECS.custom.palette),
+    materials: toList(raw?.materials, STYLE_SPECS.custom.materials),
+    furnitureLanguage: toList(raw?.furnitureLanguage, STYLE_SPECS.custom.furnitureLanguage),
+    atmosphere: String(raw?.atmosphere || STYLE_SPECS.custom.atmosphere),
+    decor: toList(raw?.decor, STYLE_SPECS.custom.decor),
+    avoid: [
+      ...toList(raw?.avoid, []),
+      "copying the reference room composition",
+      "copying the reference architecture",
+      "copying the reference furniture coordinates"
+    ]
+  };
+}
+
+async function queryFalVision(imageUrl, prompt) {
+  const key = process.env.FAL_KEY;
+  if (!key) throw new Error("FAL_KEY missing");
+  const model = process.env.FAL_VISION_MODEL || "fal-ai/moondream3-preview/query";
+  const response = await fetch(`https://fal.run/${model}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Key ${key}`
+    },
+    body: JSON.stringify({
+      image_url: imageUrl,
+      prompt,
+      reasoning: false,
+      temperature: 0
+    })
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body?.detail || body?.error || body?.message || `fal vision API ${response.status}`);
+  return { raw: body.output, usage: body.usage_info || null, model };
+}
+
+async function queryOpenRouterVision(imageUrl, prompt) {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) throw new Error("OPENROUTER_API_KEY missing");
+  const model = process.env.OPENROUTER_VISION_MODEL || "qwen/qwen3-vl-32b-instruct";
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${key}`,
+      "HTTP-Referer": process.env.OPENROUTER_SITE_URL || `http://127.0.0.1:${PORT}`,
+      "X-Title": "Wushi Room Planner"
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: prompt },
+          { type: "image_url", image_url: { url: imageUrl } }
+        ]
+      }],
+      response_format: { type: "json_object" },
+      temperature: 0,
+      max_tokens: 1200
+    })
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body?.error?.message || `OpenRouter vision API ${response.status}`);
+  const output = body?.choices?.[0]?.message?.content;
+  if (!output) throw new Error("OpenRouter vision returned empty output");
+  return { raw: output, usage: body.usage || null, model };
+}
+
+async function analyzeRoomWithFalVision(roomImage) {
+  const key = imageCacheKey(roomImage);
+  if (ROOM_ANALYSIS_CACHE.has(key)) return ROOM_ANALYSIS_CACHE.get(key);
+  const prompt = [
+    "Act as a conservative interior space planner. Inspect this exact room photograph.",
+    "Return only valid compact JSON, with every box normalized from 0 to 1 relative to the image.",
+    "Do not infer a different room. Identify openings and circulation before furniture placement.",
+    "Schema:",
+    '{"roomType":"living_room","cameraView":"...","analysisSummary":"...","zones":{"sofa":{"x":0,"y":0,"w":0,"h":0,"role":"..."},"rugTable":{"x":0,"y":0,"w":0,"h":0,"role":"..."},"mediaConsole":{"x":0,"y":0,"w":0,"h":0,"role":"..."},"wallArt":{"x":0,"y":0,"w":0,"h":0,"role":"..."},"decor":{"x":0,"y":0,"w":0,"h":0,"role":"..."}},"forbiddenZones":{"opening1":{"x":0,"y":0,"w":0,"h":0,"role":"door/window/balcony/circulation"}},"placementRules":["..."]}',
+    "The sofa box must cover one realistic sofa footprint and nearby wall area, placed against the best usable wall, never floating in the center.",
+    "The rugTable box must lie on visible floor in front of the sofa. Media console is optional if no safe opposite wall exists.",
+    "Do not create furniture zones inside doors, windows, balcony openings, hallways, or the main walking path.",
+    "Prefer fewer safe zones over speculative zones. Do not include curtains or ceiling lighting in this first-pass plan."
+  ].join(" ");
+  const result = await queryFalVision(roomImage, prompt);
+  const value = {
+    layoutPlan: {
+      ...normalizeRoomPlan(parseJsonOutput(result.raw)),
+      source: result.model
+    },
+    provider: "fal_vision",
+    model: result.model,
+    usage: result.usage
+  };
+  ROOM_ANALYSIS_CACHE.set(key, value);
+  return value;
+}
+
+async function analyzeRoomWithOpenRouterVision(roomImage) {
+  const key = `openrouter:${imageCacheKey(roomImage)}`;
+  if (ROOM_ANALYSIS_CACHE.has(key)) return ROOM_ANALYSIS_CACHE.get(key);
+  const prompt = [
+    "You are a conservative spatial planner for photorealistic furniture staging.",
+    "Analyze the exact uploaded room photograph. Do not imagine a different room.",
+    "Return only valid JSON. All x, y, w, h values must be normalized 0 to 1 relative to the original image.",
+    "First identify walls, floor plane, doors, windows, balcony openings and the main walking path. Then select physically plausible furniture zones.",
+    "Required JSON keys: roomType, cameraView, analysisSummary, zones, forbiddenZones, placementRules.",
+    "zones must contain sofa and rugTable. mediaConsole, wallArt and decor may be null when unsafe.",
+    "Each non-null zone must be {x,y,w,h,role}.",
+    "forbiddenZones must be an array of {id,x,y,w,h,role} covering every visible door, doorway, window, balcony opening and essential circulation strip.",
+    "The sofa zone must be against the longest genuinely usable wall and must include the floor contact area. Never place a sofa in the center or in front of an opening.",
+    "The rugTable zone must be on the visible floor directly in front of the sofa. Keep one continuous walking path from the camera/entrance to the far opening.",
+    "Do not plan curtains or ceiling-light edits in this pass. Do not copy composition from any style reference.",
+    'Example shape only: {"roomType":"living_room","cameraView":"entrance toward balcony","analysisSummary":"...","zones":{"sofa":{"x":0.58,"y":0.53,"w":0.32,"h":0.27,"role":"..."},"rugTable":{"x":0.30,"y":0.66,"w":0.38,"h":0.22,"role":"..."},"mediaConsole":null,"wallArt":null,"decor":null},"forbiddenZones":[{"id":"balcony","x":0.34,"y":0.18,"w":0.35,"h":0.37,"role":"keep open"}],"placementRules":["..."]}'
+  ].join(" ");
+  const result = await queryOpenRouterVision(roomImage, prompt);
+  const value = {
+    layoutPlan: {
+      ...normalizeRoomPlan(parseJsonOutput(result.raw)),
+      source: result.model
+    },
+    provider: "openrouter_vision",
+    model: result.model,
+    usage: result.usage
+  };
+  ROOM_ANALYSIS_CACHE.set(key, value);
+  return value;
+}
+
+async function analyzeRoom(roomImage) {
+  if (process.env.OPENROUTER_API_KEY) return analyzeRoomWithOpenRouterVision(roomImage);
+  throw new Error("A spatial vision model is required. Add OPENROUTER_API_KEY to enable room planning.");
+}
+
+async function analyzeStyleWithFalVision(styleImage) {
+  const key = imageCacheKey(styleImage);
+  if (STYLE_ANALYSIS_CACHE.has(key)) return STYLE_ANALYSIS_CACHE.get(key);
+  const prompt = [
+    "Analyze this interior reference only as a style and mood reference.",
+    "Ignore its room layout, camera angle, architecture, furniture coordinates, and composition.",
+    "Return only valid compact JSON using this schema:",
+    '{"palette":["..."],"materials":["..."],"furnitureLanguage":["..."],"atmosphere":"...","decor":["..."],"avoid":["..."]}',
+    "Describe colors, tone, materials, furniture silhouettes, textile language, lighting mood, and decorative character that can transfer to a different room."
+  ].join(" ");
+  const result = await queryFalVision(styleImage, prompt);
+  const spec = normalizeStyleSpec(parseJsonOutput(result.raw));
+  STYLE_ANALYSIS_CACHE.set(key, spec);
+  return spec;
+}
+
+async function resolveStyleSpec(input, styleId) {
+  if (styleId !== "custom") return STYLE_SPECS[styleId] || STYLE_SPECS.cream;
+  if (!input.styleReferenceImage) return STYLE_SPECS.custom;
+  try {
+    return await analyzeStyleWithFalVision(input.styleReferenceImage);
+  } catch (error) {
+    console.error("[gateway] custom style analysis failed, using generic custom style:", error.message);
+    return STYLE_SPECS.custom;
+  }
 }
 
 function loadDotEnv(file) {
@@ -177,7 +506,8 @@ function readBody(req) {
 }
 
 function makePrompt(input, styleId, variantIndex) {
-  const stylePrompt = STYLE_PROMPTS[styleId] || STYLE_PROMPTS.custom;
+  const styleSpec = input.styleSpec || STYLE_SPECS[styleId] || STYLE_SPECS.custom;
+  const stylePrompt = styleSpecToPrompt(styleSpec);
   const layoutPrompt = describeLayoutPlan(input.layoutPlan);
   return [
     "Interior furniture staging inside the uploaded room photo, not a new room.",
@@ -188,7 +518,8 @@ function makePrompt(input, styleId, variantIndex) {
     "The original empty room shell must remain visibly the same.",
     layoutPrompt,
     ...LAYOUT_RULES,
-    `Furniture style: ${stylePrompt}.`,
+    `Furniture style specification: ${stylePrompt}.`,
+    "Treat any preset gallery image as UI inspiration only. Do not reconstruct its shot, architecture, furniture arrangement, or viewing angle.",
     `Generate option ${variantIndex + 1} with high-end interior magazine realism, calm composition, natural light, photorealistic furniture placement.`
   ].join(" ");
 }
@@ -209,7 +540,7 @@ async function makeDeepSeekPrompt(input, styleId, variantIndex) {
   if (PROMPT_CACHE.has(cacheKey)) return PROMPT_CACHE.get(cacheKey);
 
   const fallback = makePrompt(input, styleId, variantIndex);
-  const stylePrompt = STYLE_PROMPTS[styleId] || STYLE_PROMPTS.custom;
+  const stylePrompt = styleSpecToPrompt(input.styleSpec || STYLE_SPECS[styleId] || STYLE_SPECS.custom);
   const styleName = input.styleName || STYLE_NAMES[styleId] || "interior style";
   const layoutPrompt = describeLayoutPlan(input.layoutPlan);
   const system = [
@@ -227,7 +558,7 @@ async function makeDeepSeekPrompt(input, styleId, variantIndex) {
   const user = [
     `Style name: ${styleName}`,
     `Style guidance: ${stylePrompt}`,
-    input.styleReferenceImage ? "There is also a style reference image; match its mood, material palette, and furniture language." : "",
+    input.styleReferenceImage ? "A custom reference image has already been reduced to a style specification. Use only that style specification, never its composition or furniture positions." : "",
     `Layout plan from the app: ${layoutPrompt}`,
     "Required constraints: keep walls, floor, ceiling, beams, columns, balcony, doors, windows, vents, switches, outlets, structural openings, perspective, camera angle, crop and room layout unchanged.",
     "Only place suitable movable furniture and soft furnishings inside the existing photographed room.",
@@ -295,7 +626,7 @@ async function generateWithOpenRouter(input) {
 
   const model = process.env.OPENROUTER_IMAGE_MODEL || "openai/gpt-image-1";
   const styleId = input.styleId || "cream";
-  const prompt = await makeDeepSeekPrompt(input, styleId, 0);
+  const prompt = makePrompt(input, styleId, 0);
   const references = [];
   if (input.roomImage) {
     references.push({ type: "image_url", image_url: { url: input.roomImage } });
@@ -350,7 +681,7 @@ async function generateWithFal(input) {
 
   const model = process.env.FAL_MODEL || "fal-ai/flux/dev/image-to-image";
   const styleId = input.styleId || "cream";
-  const prompt = await makeDeepSeekPrompt(input, styleId, 0);
+  const prompt = makePrompt(input, styleId, 0);
   const res = await fetch(`https://fal.run/${model}`, {
     method: "POST",
     headers: {
@@ -397,7 +728,7 @@ async function generateWithFalInpaint(input) {
 
   const model = process.env.FAL_INPAINT_MODEL || "fal-ai/flux-general/inpainting";
   const styleId = input.styleId || "cream";
-  const prompt = await makeDeepSeekPrompt(input, styleId, 0);
+  const prompt = makePrompt(input, styleId, 0);
   const negativePrompt = [
     "new room layout",
     "changed walls",
@@ -481,7 +812,12 @@ async function generateWithFalInpaint(input) {
 }
 
 async function handleGenerate(req, res) {
-  const input = await readBody(req);
+  const received = await readBody(req);
+  const styleId = received.styleId || "cream";
+  const input = {
+    ...received,
+    styleSpec: await resolveStyleSpec(received, styleId)
+  };
   const provider = process.env.MODEL_PROVIDER || "mock";
 
   if (provider === "openrouter") {
@@ -558,8 +894,21 @@ const server = http.createServer(async (req, res) => {
         hasFalKey: Boolean(process.env.FAL_KEY),
         hasDeepSeekKey: Boolean(process.env.DEEPSEEK_API_KEY),
         textProvider: process.env.TEXT_PROVIDER || null,
-        imageModel: process.env.OPENROUTER_IMAGE_MODEL || process.env.FAL_INPAINT_MODEL || process.env.FAL_MODEL || null
+        imageModel: process.env.OPENROUTER_IMAGE_MODEL || process.env.FAL_INPAINT_MODEL || process.env.FAL_MODEL || null,
+        visionModel: process.env.OPENROUTER_API_KEY
+          ? (process.env.OPENROUTER_VISION_MODEL || "qwen/qwen3-vl-32b-instruct")
+          : null
       });
+    }
+    if (req.method === "POST" && url.pathname === "/api/analyze-room") {
+      const input = await readBody(req);
+      if (!input.roomImage) return json(res, 400, { error: "roomImage missing" });
+      try {
+        return json(res, 200, await analyzeRoom(input.roomImage));
+      } catch (error) {
+        console.error("[gateway] room analysis failed:", error.message);
+        return json(res, 502, { error: error.message || "room analysis failed" });
+      }
     }
     if (req.method === "GET" && url.pathname === "/api/generate") {
       return html(res, 200, `<!doctype html>
