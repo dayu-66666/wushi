@@ -271,18 +271,17 @@
     background-position:center;
     opacity:0;
     animation:
-      homeFrameCycle 24s ease-in-out infinite,
-      homeHeroDrift 18s ease-in-out infinite alternate;
+      homeFrameCycle 12s ease-in-out infinite,
+      homeHeroDrift 10s ease-in-out infinite alternate;
   }
   .home-frame:nth-child(1){animation-delay:0s, 0s;}
-  .home-frame:nth-child(2){animation-delay:6s, -2s;}
-  .home-frame:nth-child(3){animation-delay:12s, -4s;}
-  .home-frame:nth-child(4){animation-delay:18s, -6s;}
+  .home-frame:nth-child(2){animation-delay:4s, -2s;}
+  .home-frame:nth-child(3){animation-delay:8s, -4s;}
   @keyframes homeFrameCycle{
     0%{opacity:0;}
     4%{opacity:1;}
-    24%{opacity:1;}
-    31%{opacity:0;}
+    29%{opacity:1;}
+    37%{opacity:0;}
     100%{opacity:0;}
   }
   .home-scrim{
@@ -992,7 +991,7 @@ const STYLE_IMAGES = Object.fromEntries(
     Array.from({ length: count }, (_, i) => ASSET(`assets/images/styles/${id}/${String(i + 1).padStart(2, '0')}.jpg`))
   ])
 );
-const HOME_IMAGES = Array.from({ length: 4 }, (_, i) => ASSET(`assets/images/home/${String(i + 1).padStart(2, '0')}.jpg`));
+const HOME_IMAGES = ['01', '03', '04'].map(id => ASSET(`assets/images/home/${id}.jpg`));
 const styleImage = (id, index=0) => (STYLE_IMAGES[id] && STYLE_IMAGES[id][index % STYLE_IMAGES[id].length]) || IMG(`ai-home-${id}-${index}`, 500, 400);
 
 const STYLES = [
@@ -1028,6 +1027,7 @@ const STEPS = ['识别墙面、地面和透视', '清除原有家具', '生成�
 const FURNITURE_LISTS = {
   cream: [
     { name:'奶油色靠墙布艺沙发', tag:'沙发', price:2899, seed:'shop-cream-sofa', icon:'sofa' },
+    { name:'奶油色圆润圈圈绒单椅', tag:'单椅', price:1299, seed:'shop-cream-chair', icon:'chair' },
     { name:'圆形浅木茶几', tag:'茶几', price:699, seed:'shop-cream-table', icon:'table' },
     { name:'米白高密度地毯', tag:'地毯', price:459, seed:'shop-cream-rug', icon:'rug' },
     { name:'浅木电视柜', tag:'电视柜', price:1399, seed:'shop-cream-cabinet', icon:'cabinet' },
@@ -1037,6 +1037,7 @@ const FURNITURE_LISTS = {
   ],
   wood: [
     { name:'原木色靠墙布艺沙发', tag:'沙发', price:3599, seed:'shop-wood-sofa', icon:'sofa' },
+    { name:'浅橡木编织休闲单椅', tag:'单椅', price:1499, seed:'shop-wood-chair', icon:'chair' },
     { name:'橡木原木茶几', tag:'茶几', price:899, seed:'shop-wood-table', icon:'table' },
     { name:'亚麻纹理地毯', tag:'地毯', price:399, seed:'shop-wood-rug', icon:'rug' },
     { name:'矮款原木电视柜', tag:'电视柜', price:1599, seed:'shop-wood-cabinet', icon:'cabinet' },
@@ -1046,6 +1047,7 @@ const FURNITURE_LISTS = {
   ],
   wabi: [
     { name:'亚麻布艺靠墙沙发', tag:'沙发', price:2199, seed:'shop-wabi-sofa', icon:'sofa' },
+    { name:'低矮原木亚麻单椅', tag:'单椅', price:1399, seed:'shop-wabi-chair', icon:'chair' },
     { name:'水泥面矮茶几', tag:'茶几', price:659, seed:'shop-wabi-table', icon:'table' },
     { name:'粗麻手织地毯', tag:'地毯', price:379, seed:'shop-wabi-rug', icon:'rug' },
     { name:'低矮原木边柜', tag:'电视柜', price:1299, seed:'shop-wabi-cabinet', icon:'cabinet' },
@@ -1054,6 +1056,7 @@ const FURNITURE_LISTS = {
   ],
   midcentury: [
     { name:'复古绒面靠墙沙发', tag:'沙发', price:3299, seed:'shop-mid-sofa', icon:'sofa' },
+    { name:'胡桃木焦糖皮休闲单椅', tag:'单椅', price:1899, seed:'shop-mid-chair', icon:'chair' },
     { name:'胡桃木复古茶几', tag:'茶几', price:1099, seed:'shop-mid-table', icon:'table' },
     { name:'撞色几何图案地毯', tag:'地毯', price:499, seed:'shop-mid-rug', icon:'rug' },
     { name:'胡桃木电视柜', tag:'电视柜', price:1999, seed:'shop-mid-cabinet', icon:'cabinet' },
@@ -1062,6 +1065,7 @@ const FURNITURE_LISTS = {
   ],
   modern: [
     { name:'灰色靠墙模块沙发', tag:'沙发', price:2799, seed:'shop-modern-sofa', icon:'sofa' },
+    { name:'细框暖灰建筑感单椅', tag:'单椅', price:1599, seed:'shop-modern-chair', icon:'chair' },
     { name:'玻璃金属茶几', tag:'茶几', price:899, seed:'shop-modern-table', icon:'table' },
     { name:'低饱和灰色地毯', tag:'地毯', price:389, seed:'shop-modern-rug', icon:'rug' },
     { name:'极简悬浮电视柜', tag:'电视柜', price:1699, seed:'shop-modern-cabinet', icon:'cabinet' },
@@ -1070,6 +1074,7 @@ const FURNITURE_LISTS = {
   ],
   italian: [
     { name:'米灰靠墙真皮沙发', tag:'沙发', price:4299, seed:'shop-italian-sofa', icon:'sofa' },
+    { name:'米灰皮革雕塑感单椅', tag:'单椅', price:2499, seed:'shop-italian-chair', icon:'chair' },
     { name:'洞石纹圆茶几', tag:'茶几', price:1699, seed:'shop-italian-table', icon:'table' },
     { name:'低饱和羊毛地毯', tag:'地毯', price:899, seed:'shop-italian-rug', icon:'rug' },
     { name:'木石混合电视柜', tag:'电视柜', price:2699, seed:'shop-italian-cabinet', icon:'cabinet' },
@@ -1084,6 +1089,7 @@ const FURNITURE_LISTS = {
   ],
   song: [
     { name:'浅木靠墙坐榻沙发', tag:'沙发', price:3899, seed:'shop-song-seat', icon:'sofa' },
+    { name:'浅木亚麻东方休闲单椅', tag:'单椅', price:1799, seed:'shop-song-chair', icon:'chair' },
     { name:'素面实木茶几', tag:'茶几', price:1299, seed:'shop-song-table', icon:'table' },
     { name:'亚麻素色地垫', tag:'地毯', price:329, seed:'shop-song-rug', icon:'rug' },
     { name:'东方木作电视柜', tag:'电视柜', price:2199, seed:'shop-song-cabinet', icon:'cabinet' },
@@ -1092,6 +1098,7 @@ const FURNITURE_LISTS = {
   ],
   oldmoney: [
     { name:'深棕靠墙皮革沙发', tag:'沙发', price:4999, seed:'shop-oldmoney-sofa', icon:'sofa' },
+    { name:'胡桃木橄榄绿羊毛单椅', tag:'单椅', price:2699, seed:'shop-oldmoney-chair', icon:'chair' },
     { name:'胡桃木电视边柜', tag:'电视柜', price:2299, seed:'shop-oldmoney-cabinet', icon:'cabinet' },
     { name:'羊毛波斯纹地毯', tag:'地毯', price:1299, seed:'shop-oldmoney-rug', icon:'rug' },
     { name:'深木色茶几', tag:'茶几', price:1299, seed:'shop-oldmoney-table', icon:'table' },
@@ -1100,6 +1107,7 @@ const FURNITURE_LISTS = {
   ],
   custom: [
     { name:'同款风格靠墙沙发（参考图识别）', tag:'沙发', price:2599, seed:'shop-custom-sofa', icon:'sofa' },
+    { name:'同款风格休闲单椅（参考图识别）', tag:'单椅', price:1599, seed:'shop-custom-chair', icon:'chair' },
     { name:'同款风格茶几（参考图识别）', tag:'茶几', price:799, seed:'shop-custom-table', icon:'table' },
     { name:'相近色系地毯（参考图识别）', tag:'地毯', price:429, seed:'shop-custom-rug', icon:'rug' },
     { name:'相近风格电视柜（参考图识别）', tag:'电视柜', price:1399, seed:'shop-custom-cabinet', icon:'cabinet' },
@@ -1148,8 +1156,10 @@ const state = {
   stack: [],
   photo: null,           // dataURL or picsum url of the user's captured/uploaded room
   roomMask: null,        // generated inpainting mask for furniture placement area
+  roomMaskMeta: null,    // white editable coverage and zone diagnostics
   layoutPlan: null,      // visual-model furniture layout plan, with a local fallback
   roomAnalysis: null,    // cached room analysis for the current uploaded photo
+  roomAnalysisPromise: null,
   compStatus: 'good',    // camera composition status
   selectedStyle: null,
   customStyle: null,   // { img: dataURL } uploaded reference image for style-select page
@@ -1200,6 +1210,7 @@ function createLayoutPlan(width, height){
     ],
     placementRules: [
       'exactly one main sofa, placed close to and parallel with the usable wall',
+      'exactly one accent lounge chair, angled toward the sofa and coffee table, outside the walking path',
       'one coffee table only',
       'one rug under the seating area',
       'one low TV console or media cabinet on the opposite wall if there is a usable wall',
@@ -1213,6 +1224,7 @@ function createLayoutPlan(width, height){
     ],
     zones: {
       sofa: { x: 0.58, y: 0.53, w: 0.34, h: 0.28, role: 'main sofa placed close to the right usable wall, parallel to that wall, facing room center' },
+      accentChair: { x: 0.14, y: 0.68, w: 0.16, h: 0.19, role: 'one compact accent lounge chair angled toward the sofa and coffee table, outside the central walking path' },
       rugTable: { x: 0.30, y: 0.66, w: 0.42, h: 0.24, role: 'rug and single coffee table centered in front of the sofa, scaled to the floor perspective' },
       mediaConsole: { x: 0.10, y: 0.57, w: 0.24, h: 0.16, role: 'low TV console or media cabinet along the opposite left wall, kept shallow and aligned with wall perspective' },
       wallArt: { x: 0.13, y: 0.34, w: 0.20, h: 0.16, role: 'one restrained framed artwork on the empty left wall above the console' },
@@ -1264,15 +1276,36 @@ function createFurnitureMask(imgSrc, suppliedPlan=null){
       });
 
       ctx.fillStyle = '#000';
-      Object.values(plan.forbiddenZones || {}).forEach(zone => {
+      Object.entries(plan.forbiddenZones || {}).forEach(([key, zone]) => {
         if(!zone || !Number.isFinite(Number(zone.x)) || !Number.isFinite(Number(zone.y)) || !Number.isFinite(Number(zone.w)) || !Number.isFinite(Number(zone.h))) return;
+        const label = `${key} ${zone.role || ''}`.toLowerCase();
+        const isCirculation = /(circulation|walking|walkway|path|通行|动线)/.test(label);
+        const isHardOpening = /(door|window|balcony|opening|门|窗|阳台)/.test(label);
+        if(isCirculation || !isHardOpening) return;
         roundRectPath(ctx, Number(zone.x) * width, Number(zone.y) * height, Number(zone.w) * width, Number(zone.h) * height, width * 0.02);
         ctx.fill();
       });
 
-      resolve({ mask: canvas.toDataURL('image/png'), plan });
+      const pixels = ctx.getImageData(0, 0, width, height).data;
+      let sampled = 0;
+      let editable = 0;
+      const stride = 16;
+      for(let i = 0; i < pixels.length; i += 4 * stride){
+        sampled++;
+        if(pixels[i] > 240) editable++;
+      }
+      resolve({
+        mask: canvas.toDataURL('image/png'),
+        plan,
+        meta: {
+          editableCoverage: sampled ? Number((editable / sampled).toFixed(4)) : 0,
+          zoneCount: Object.values(zones).filter(Boolean).length,
+          imageWidth: width,
+          imageHeight: height
+        }
+      });
     };
-    image.onerror = () => resolve({ mask: null, plan: createLayoutPlan(900, 1400) });
+    image.onerror = () => resolve({ mask: null, plan: createLayoutPlan(900, 1400), meta: { editableCoverage: 0, zoneCount: 0, imageWidth: 900, imageHeight: 1400 } });
     image.src = imgSrc;
   });
 }
@@ -1281,8 +1314,10 @@ async function setRoomPhoto(img, { preserveReference=false } = {}){
   state.photo = img;
   const layout = await createFurnitureMask(img);
   state.roomMask = layout.mask;
+  state.roomMaskMeta = layout.meta;
   state.layoutPlan = layout.plan;
   state.roomAnalysis = null;
+  state.roomAnalysisPromise = null;
   state.generatedPlans = null;
   state.generationMeta = null;
   state.resultTab = 'A';
@@ -1293,6 +1328,7 @@ async function setRoomPhoto(img, { preserveReference=false } = {}){
   }
   state.preserveReferenceForNextRoomUpload = false;
   nav('style');
+  startRoomAnalysis(img);
 }
 
 function resizeImageDataUrl(dataUrl, maxDimension=1600, quality=0.88){
@@ -1358,6 +1394,7 @@ async function requestModelGeneration(){
   const payload = {
     roomImage: state.photo || IMG('camera-room-9',800,1400),
     roomMask: state.roomMask,
+    roomMaskMeta: state.roomMaskMeta,
     layoutPlan: state.layoutPlan,
     styleId: state.selectedStyle,
     styleName: style ? style.name : '自定义参考风格',
@@ -1366,7 +1403,7 @@ async function requestModelGeneration(){
     copyReferenceComposition: false,
     outputs: 1,
     preserveStructure: true,
-    generationMode: 'layout_guided_inpaint'
+    generationMode: 'layout_guided_edit'
   };
   try{
     const res = await fetch(MODEL_API_URL, {
@@ -1374,33 +1411,51 @@ async function requestModelGeneration(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify(payload)
     });
-    if(!res.ok) throw new Error(`model api ${res.status}`);
-    return await res.json();
+    const data = await res.json().catch(()=> ({}));
+    if(!res.ok) throw new Error(data.error || `model api ${res.status}`);
+    if(!data.plans || !data.plans[0] || !data.plans[0].after) throw new Error('模型没有返回有效的家具方案');
+    return data;
   }catch(err){
-    console.warn('model api unavailable, using local fallback', err);
-    return localMockGenerationPayload();
+    console.warn('model generation failed', err);
+    throw err;
   }
+}
+
+function startRoomAnalysis(photo){
+  if(!photo) return Promise.resolve(null);
+  if(state.roomAnalysis && state.roomAnalysis.layoutPlan) return Promise.resolve(state.roomAnalysis);
+  if(state.roomAnalysisPromise) return state.roomAnalysisPromise;
+  const analyzedPhoto = photo;
+  const promise = (async()=>{
+    const res = await fetch(ROOM_ANALYZE_API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ roomImage: analyzedPhoto })
+    });
+    if(!res.ok) throw new Error(`room analysis ${res.status}`);
+    const analysis = await res.json();
+    if(!analysis.layoutPlan) throw new Error('room analysis returned no layout plan');
+    const layout = await createFurnitureMask(analyzedPhoto, analysis.layoutPlan);
+    if(state.photo !== analyzedPhoto) return null;
+    state.roomAnalysis = analysis;
+    state.layoutPlan = layout.plan;
+    state.roomMask = layout.mask;
+    state.roomMaskMeta = layout.meta;
+    return analysis;
+  })();
+  state.roomAnalysisPromise = promise;
+  promise.catch(err => console.warn('room analysis unavailable, using conservative local layout', err));
+  return promise;
 }
 
 async function ensureRoomAnalysis(){
   if(state.roomAnalysis && state.roomAnalysis.layoutPlan) return state.roomAnalysis;
   try{
-    const res = await fetch(ROOM_ANALYZE_API_URL, {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ roomImage: state.photo })
-    });
-    if(!res.ok) throw new Error(`room analysis ${res.status}`);
-    const analysis = await res.json();
-    if(!analysis.layoutPlan) throw new Error('room analysis returned no layout plan');
-    const layout = await createFurnitureMask(state.photo, analysis.layoutPlan);
-    state.roomAnalysis = analysis;
-    state.layoutPlan = layout.plan;
-    state.roomMask = layout.mask;
-    return analysis;
+    return await startRoomAnalysis(state.photo);
   }catch(err){
-    console.warn('room analysis unavailable, using conservative local layout', err);
     return null;
+  }finally{
+    state.roomAnalysisPromise = null;
   }
 }
 
@@ -1448,7 +1503,7 @@ function renderStyleActionBar(){
 /* ============ HOME ============ */
 function renderHome(){
   return `
-  <div class="home-hero" style="background-image:url('${HOME_IMAGES[0] || IMG('home-hero-magazine-9', 900, 1400)}')">
+  <div class="home-hero" style="background-image:url('${HOME_IMAGES[0]}')">
     <div class="home-frames">
       ${HOME_IMAGES.map(img => `<div class="home-frame" style="background-image:url('${img}')"></div>`).join('')}
     </div>
@@ -1912,7 +1967,7 @@ document.getElementById('fileInput').addEventListener('change', function(e){
   const preserveReference = state.preserveReferenceForNextRoomUpload;
   const reader = new FileReader();
   reader.onload = async function(ev){
-    const image = await resizeImageDataUrl(ev.target.result, 1600, 0.88);
+    const image = await resizeImageDataUrl(ev.target.result, 1024, 0.86);
     await setRoomPhoto(image, { preserveReference });
   };
   reader.readAsDataURL(file);
@@ -1927,7 +1982,7 @@ document.getElementById('cameraInput').addEventListener('change', function(e){
   const preserveReference = state.preserveReferenceForNextRoomUpload;
   const reader = new FileReader();
   reader.onload = async function(ev){
-    const image = await resizeImageDataUrl(ev.target.result, 1600, 0.88);
+    const image = await resizeImageDataUrl(ev.target.result, 1024, 0.86);
     await setRoomPhoto(image, { preserveReference });
   };
   reader.readAsDataURL(file);
@@ -1951,6 +2006,7 @@ document.getElementById('styleFileInput').addEventListener('change', function(e)
 
 function runGeneratingSequence(){
   const runId = state.generationRunId;
+  let generationError = null;
   const generationPromise = requestModelGeneration().then((data)=>{
     if(runId !== state.generationRunId) return;
     const plans = {};
@@ -1967,8 +2023,11 @@ function runGeneratingSequence(){
       provider: data.provider || 'unknown',
       model: data.model || '',
       layoutPlan: data.layoutPlan || null,
+      quality: data.quality || null,
       prompt: data.plans && data.plans[0] ? data.plans[0].prompt : ''
     };
+  }).catch((err)=>{
+    generationError = err;
   });
   const stepsEls = () => Array.from(document.querySelectorAll('#genSteps .gen-step'));
   const fill = document.getElementById('genFill');
@@ -1986,7 +2045,13 @@ function runGeneratingSequence(){
     } else {
       setTimeout(async ()=>{
         await generationPromise;
-        if(runId === state.generationRunId) nav('result', {push:false});
+        if(runId !== state.generationRunId) return;
+        if(generationError){
+          nav('style', {push:false});
+          setTimeout(()=> showToast(`生成失败：${generationError.message || '请稍后重试'}`, 4200), 0);
+          return;
+        }
+        nav('result', {push:false});
       }, 500);
     }
   }
