@@ -1174,32 +1174,79 @@ function makeStagedInpaintPrompt(input, styleId, stage) {
   ].join(" ");
 }
 
+// FLUX Kontext's T5 encoder reads only the first 512 tokens (~380 words); anything
+// beyond is silently dropped. Everything below is budgeted to fit inside that window,
+// with the reference furniture and palette first because they drive differentiation.
+function clampWords(value, maxWords) {
+  const words = String(value || "").trim().replace(/\s+/g, " ").split(" ").filter(Boolean);
+  return words.slice(0, maxWords).join(" ");
+}
+
+const KONTEXT_REFERENCE_OBJECTS = [
+  ["sofa", "Sofa", 18],
+  ["accentChair", "Accent chair", 14],
+  ["coffeeTable", "Coffee table", 16],
+  ["rug", "Rug", 16],
+  ["artwork", "Artwork", 14],
+  ["mediaConsole", "Media console", 8],
+  ["floorLamp", "Floor lamp", 8],
+  ["cushions", "Cushions", 8],
+  ["decor", "Decor", 8]
+];
+
+function compactReferenceContract(styleSpec) {
+  const scene = styleSpec?.sceneObjects || {};
+  const lines = [];
+  for (const [key, label, budget] of KONTEXT_REFERENCE_OBJECTS) {
+    const object = scene[key];
+    if (!object || object.present === false) continue;
+    const detail = clampWords([object.visualDescription, object.color, object.material].filter(Boolean).join(", "), budget);
+    if (detail) lines.push(`${label}: ${detail}`);
+  }
+  return lines;
+}
+
+function compactStyleSummary(styleSpec) {
+  const list = (key, count) => Array.isArray(styleSpec?.[key]) ? styleSpec[key].filter(Boolean).slice(0, count).join(", ") : "";
+  return [
+    list("palette", 4) ? `palette ${list("palette", 4)}` : "",
+    list("materials", 4) ? `materials ${list("materials", 4)}` : "",
+    list("furnitureLanguage", 3) ? `furniture language ${list("furnitureLanguage", 3)}` : "",
+    styleSpec?.atmosphere ? `mood ${clampWords(styleSpec.atmosphere, 10)}` : "",
+    list("avoid", 3) ? `avoid ${list("avoid", 3)}` : ""
+  ].filter(Boolean).join("; ");
+}
+
 function makeKontextPrompt(input, styleId) {
   const styleSpec = input.styleSpec || STYLE_SPECS[styleId] || STYLE_SPECS.custom;
   const zones = input.layoutPlan?.zones || {};
-  const assignments = [
-    zones.sofa ? `Place one main sofa ${zones.sofa.role}.` : "Place one correctly scaled main sofa against the best usable side wall.",
-    zones.accentChair ? `Place exactly one accent lounge chair ${zones.accentChair.role}. Set it at a natural 35-to-45-degree angle toward the coffee table and conversation center, not squarely toward the sofa.` : "Place exactly one compact accent lounge chair beside or diagonally opposite the sofa at a natural 35-to-45-degree angle toward the coffee table and conversation center without blocking circulation.",
-    zones.rugTable ? `Place one rug and one coffee table ${zones.rugTable.role}.` : "Place one rug and one coffee table directly in front of the sofa.",
-    zones.mediaConsole ? `Place one low media console ${zones.mediaConsole.role}, with one correctly scaled television directly above it, preferably wall-mounted.` : "",
-    zones.wallArt ? `Create an intentional art treatment behind the sofa ${zones.wallArt.role}, choosing a statement work, diptych, triptych, restrained gallery wall, or art paired with wall sconces according to the style and wall proportions.` : "",
-    zones.decor ? `Place one slim floor lamp, plant, or restrained decor element ${zones.decor.role}.` : ""
-  ].filter(Boolean);
+  const scene = styleSpec.sceneObjects || {};
+  const role = zone => zone?.role ? ` ${clampWords(zone.role, 8)}` : "";
+  const referenceLines = compactReferenceContract(styleSpec);
+  const complements = [
+    !scene.sofa?.present ? "one sofa with cushions" : "",
+    !scene.accentChair?.present ? "one accent chair" : "",
+    !scene.coffeeTable?.present ? "one coffee table" : "",
+    !scene.rug?.present ? "one large rug" : "",
+    !scene.mediaConsole?.present ? "a low media console" : "",
+    "a television above the console",
+    !scene.artwork?.present ? "art behind the sofa" : "",
+    !scene.floorLamp?.present ? "a floor lamp" : "",
+    "flowers on the coffee table and books on the console"
+  ].filter(Boolean).join(", ");
   return [
-    input.directVisualReference ? "IMAGE 1 is the user's immutable room photograph. IMAGE 2 is the chosen inspiration reference." : "",
-    "Edit this exact room photograph into a furnished living room; do not create a different room.",
-    input.refinementInstruction
-      ? `The user requested this change for the new variation: ${String(input.refinementInstruction).slice(0, 240)}. Prioritize this request while keeping the same selected style, complete living-room furniture recipe, safe layout and immutable architecture.`
-      : "Generate a fresh complete variation in the selected style.",
-    input.directVisualReference ? "Read IMAGE 2 directly. Recreate every suitable visible furniture or decor object from IMAGE 2 as a close-looking piece in IMAGE 1, preserving its silhouette, color, material, proportions and distinctive details. Adapt scale and placement to IMAGE 1. For mandatory objects absent from IMAGE 2, create complementary pieces in the same style." : "",
-    input.directVisualReference ? "Never transfer IMAGE 2's walls, floor, ceiling, doors, windows, camera angle, lighting geometry or furniture coordinates. IMAGE 1 alone controls all architecture and perspective." : "",
-    assignments.join(" "),
-    livingRoomRecipePrompt(styleId, styleSpec),
-    "Add a complete, coherent furniture and soft-furnishing set, not an empty room and not a sparse retouch. Do not omit any mandatory recipe object.",
-    "Keep the exact walls, marble floor pattern, ceiling, recessed lights, air-conditioning vents, balcony doors, black frames, openings, switches, outlets, skirting boards, perspective, crop and camera angle unchanged.",
-    "Keep the balcony doorway and the central walking route clear. Use exactly one sofa, one accent chair, one coffee table and one rug. No furniture may float, block an opening, or appear at an unrealistic scale.",
-    `Use this style only for the new furniture and decor: ${styleSpecToPrompt(styleSpec)}.`,
-    "Match the existing daylight, reflections, perspective and contact shadows. Finish with subtle style-appropriate editorial color grading: balanced exposure and white balance, controlled highlights, dimensional shadows, refined local contrast, natural saturation and crisp material texture. Do not recolor the existing architecture or apply a heavy filter. Photorealistic high-end interior magazine finish. No text, labels, logos or watermark."
+    input.directVisualReference ? "IMAGE 1 is the immutable room photograph; IMAGE 2 is only a furniture and style reference — never copy its room, camera or layout." : "",
+    "Furnish this exact empty room photograph into one complete, professionally styled living room. Do not create a different room.",
+    input.refinementInstruction ? `Top-priority user request: ${clampWords(input.refinementInstruction, 30)}.` : "",
+    referenceLines.length
+      ? `Recreate these reference pieces faithfully — same colors, materials and silhouettes, rescaled to this room: ${referenceLines.join(". ")}.`
+      : "",
+    `Style: ${compactStyleSummary(styleSpec)}.`,
+    complements ? `Complete the set in the same style with ${complements}.` : "",
+    `Placement: sofa${role(zones.sofa) || " against the main usable wall"}; one accent chair${role(zones.accentChair)} angled 35-45 degrees toward the coffee table; rug and coffee table${role(zones.rugTable) || " in front of the sofa"}; media console${role(zones.mediaConsole) || " on the opposite wall"}; art${role(zones.wallArt) || " behind the sofa"}; lamp or plant${role(zones.decor)}.`,
+    "Keep the architecture exactly as photographed: walls, floor, ceiling, doors, windows, balcony, openings, vents, switches, skirting, and the original camera angle, crop, perspective and daylight direction. Do not repaint, crop, zoom or add openings.",
+    "Keep the balcony door and walking path clear. Exactly one sofa, one accent chair, one coffee table, one rug. Real apartment scale, grounded furniture, natural contact shadows.",
+    "Photorealistic magazine-quality staging. No text or watermark."
   ].filter(Boolean).join(" ");
 }
 
@@ -1219,7 +1266,7 @@ function makeKontextRepairPrompt(input, report, regenerateFromOriginal) {
   const missing = report.missingRequired.length
     ? report.missingRequired.map(id => LIVING_ROOM_RECIPE.find(item => item.id === id)?.label || id).join(", ")
     : "none";
-  const issueText = [...report.severeIssues, ...report.issues, ...report.structureChanges].slice(0, 12).join("; ") || "none";
+  const issueText = clampWords([...report.severeIssues, ...report.issues, ...report.structureChanges].slice(0, 6).join("; "), 45) || "none";
   if (regenerateFromOriginal) {
     return [
       makeKontextPrompt(input, input.styleId || "cream"),
@@ -1694,7 +1741,7 @@ async function callFalKontext({ key, model, imageUrl, imageUrls, prompt, aspectR
     body: JSON.stringify({
       ...(multi ? { image_urls: references } : { image_url: references[0] }),
       prompt,
-      guidance_scale: Number(process.env.FAL_EDIT_GUIDANCE || 3.5),
+      guidance_scale: Number(process.env.FAL_EDIT_GUIDANCE || 4.5),
       num_images: 1,
       output_format: "jpeg",
       safety_tolerance: process.env.FAL_SAFETY_TOLERANCE || "2",
@@ -1720,6 +1767,9 @@ async function generateWithFalKontext(input) {
 
   const hasVisualReference = Boolean(input.styleReferenceImage && process.env.ENABLE_MULTI_REFERENCE === "true");
   const kontextInput = { ...input, directVisualReference: hasVisualReference };
+  if (kontextInput.refinementInstruction) {
+    kontextInput.refinementInstruction = await translateRefinementInstruction(String(kontextInput.refinementInstruction).slice(0, 240));
+  }
   const model = hasVisualReference
     ? (process.env.FAL_MULTI_EDIT_MODEL || "fal-ai/flux-pro/kontext/multi")
     : (process.env.FAL_EDIT_MODEL || "fal-ai/flux-pro/kontext");
