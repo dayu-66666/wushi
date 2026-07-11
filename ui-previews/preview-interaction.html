@@ -276,7 +276,7 @@
   }
   .home-frame:nth-child(1){animation-delay:0s, 0s;}
   .home-frame:nth-child(2){animation-delay:4s, -2s;}
-  .home-frame:nth-child(3){animation-delay:8s, -4s;}
+  .home-frame:nth-child(3){animation-delay:8s, -4s;background-position:55% center;}
   @keyframes homeFrameCycle{
     0%{opacity:0;}
     4%{opacity:1;}
@@ -885,7 +885,7 @@
     align-items:center;
     gap:8px;
     margin-top:12px;
-    padding:5px 5px 5px 13px;
+    padding:5px 13px;
     border-radius:999px;
     background:#181818;
     border:1px solid #302D29;
@@ -902,19 +902,6 @@
     font:13px var(--font-sans);
   }
   .refine-input::placeholder{color:#716B64;}
-  .refine-send{
-    width:36px;
-    height:36px;
-    flex:0 0 36px;
-    padding:0;
-    border:0;
-    border-radius:50%;
-    background:var(--ink);
-    color:var(--cream);
-    font-size:19px;
-    line-height:1;
-    cursor:pointer;
-  }
   .result-actions{display:flex; gap:12px; padding:14px 18px 6px;}
   .result-actions .btn-primary, .result-actions .btn-secondary{flex:1;}
   .shop-entry{
@@ -1200,6 +1187,34 @@
   .history-thumb{width:70px; height:70px; border-radius:12px; background-size:cover; background-position:center; flex-shrink:0;}
   .history-info .name{font-weight:700; font-size:14px; margin-bottom:4px;}
   .history-info .meta{font-size:12px; color:var(--ink-soft);}
+  .empty-state{
+    min-height:430px;
+    padding:84px 34px 120px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .empty-state .empty-icon{
+    width:54px;height:54px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink);background:var(--paper);border:1px solid var(--line);
+    margin-bottom:18px;
+  }
+  .empty-state .empty-icon svg{width:22px;height:22px;}
+  .empty-state h2{font-family:var(--font-serif);font-size:22px;font-weight:600;margin:0 0 8px;}
+  .empty-state p{font-size:12.5px;line-height:1.7;color:var(--ink-soft);margin:0;max-width:240px;}
+
+  .favorite-grid{padding:6px 18px 110px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .favorite-card{
+    appearance:none;border:1px solid var(--line);padding:0;overflow:hidden;
+    border-radius:var(--radius-md);background:var(--paper);color:var(--ink);text-align:left;cursor:pointer;
+  }
+  .favorite-card img{display:block;width:100%;height:142px;object-fit:cover;}
+  .favorite-card-copy{padding:11px 12px 12px;}
+  .favorite-card-copy .name{font-family:var(--font-serif);font-size:15px;font-weight:600;}
+  .favorite-card-copy .meta{font-size:11px;color:var(--ink-soft);margin-top:4px;}
 
   /* ===== PROFILE ===== */
   .profile-head{display:flex; align-items:center; gap:14px; padding:42px 18px 20px;}
@@ -1275,7 +1290,7 @@ const STYLE_IMAGES = Object.fromEntries(
     Array.from({ length: count }, (_, i) => ASSET(`assets/images/styles/${id}/${String(i + 1).padStart(2, '0')}.jpg`))
   ])
 );
-const HOME_IMAGES = ['01', '03', '04'].map(id => ASSET(`assets/images/home/${id}.jpg`));
+const HOME_IMAGES = ['01', '05', '07'].map(id => ASSET(`assets/images/home/${id}.jpg`));
 const styleImage = (id, index=0) => (STYLE_IMAGES[id] && STYLE_IMAGES[id][index % STYLE_IMAGES[id].length]) || IMG(`ai-home-${id}-${index}`, 500, 400);
 
 const STYLES = [
@@ -1301,11 +1316,7 @@ const INSPIRATION = STYLES.flatMap(style =>
   }))
 );
 
-const HISTORY = [
-  { seed:'hist-1', name:'客厅 · 奶油风改造', time:'2 小时前', count:1, style:'cream' },
-  { seed:'hist-2', name:'卧室 · 原木风改造', time:'昨天 20:14', count:1, style:'wood' },
-  { seed:'hist-3', name:'书房 · 中古风改造', time:'3 天前', count:1, style:'midcentury' },
-];
+const HISTORY = [];
 
 const STEPS = ['识别墙面、地面和透视', '清除原有家具', '生成家具与软装方案', '检查结构一致性'];
 
@@ -1454,7 +1465,7 @@ const state = {
   customStyle: null,   // { img: dataURL } uploaded reference image for style-select page
   preserveReferenceForNextRoomUpload: false,
   resultTab: 'A',
-  historyItems: [...HISTORY],
+  historyItems: [],
   favoriteInsp: new Set(),
   selectedInspiration: null,
   inspirationZoomOpen: false,
@@ -1765,6 +1776,7 @@ async function requestModelGeneration(){
     copyReferenceComposition: false,
     outputs: 1,
     preserveStructure: true,
+    refinementInstruction: state.pendingRefinement || null,
     generationMode: 'layout_guided_edit'
   };
   try{
@@ -1837,7 +1849,7 @@ function render(){
     home: renderHome, camera: renderCamera, photoCheck: renderPhotoCheck, style: renderStyle, generating: renderGenerating,
     result: renderResult, shoppingList: renderShoppingList,
     inspiration: renderInspiration, inspirationDetail: renderInspirationDetail, history: renderHistory,
-    profile: renderProfile,
+    profile: renderProfile, favorites: renderFavorites,
   };
   screen.innerHTML = renderers[state.page]();
   navHost.innerHTML = state.page === 'style' ? renderStyleActionBar() : (TAB_PAGES.includes(state.page) ? renderBottomNav() : '');
@@ -2061,7 +2073,6 @@ function renderResult(){
   const before = state.photo || IMG('camera-room-9',800,1400);
   const after = plan.after;
   const isFav = state.favoriteResultStyles.has(plan.id);
-  const structureLocked = state.generationMeta && state.generationMeta.provider === 'fal_structure_fill';
   return `
   <div class="topbar">
     <button class="icon-btn" data-action="back">${ICONS.back}</button>
@@ -2075,17 +2086,12 @@ function renderResult(){
     <div class="compare-label after">改造后</div>
     <div class="compare-handle" id="compareHandle" style="left:50%"></div>
   </div>
-  <div class="result-note">${structureLocked ? '✓ 原空间结构已由遮罩锁定，仅生成家具与软装' : '✓ 已按原空间生成，请滑动对比结构与布局'}</div>
-  <div class="result-meta">
-    <div class="name">方案 · ${plan.name}</div>
-    <div class="desc">${plan.desc}</div>
-  </div>
+  <div class="result-note">✓ 已按原空间生成，请滑动对比家具布置效果。</div>
   <div class="refine-panel">
     <div class="refine-title">继续调整这套方案</div>
-    <div class="refine-sub">局部调整正在接入；现在可以先记录一个主要调整</div>
+    <div class="refine-sub">描述一个主要调整；留空则重新生成整套方案</div>
     <div class="refine-compose">
       <input class="refine-input" id="refineInput" value="${escapeText(state.refinementText)}" placeholder="例如：把地毯换成芥末黄色" maxlength="80" />
-      <button class="refine-send" data-action="submit-refinement" aria-label="应用调整">→</button>
     </div>
   </div>
   <div class="result-actions">
@@ -2165,7 +2171,7 @@ function renderShoppingList(){
         </div>
         <div class="shop-side">
           <div class="shop-price">¥${it.price.toLocaleString()}</div>
-          <a class="buy-link" href="${shoppingUrl(it.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">查看相似款</a>
+          <a class="buy-link" href="${shoppingUrl(it.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">购买链接</a>
         </div>
       </div>`;
     }).join('')}
@@ -2246,7 +2252,11 @@ function renderHistory(){
     <div class="title">历史</div>
     <div style="width:36px"></div>
   </div>
-  ${items.length === 0 ? `<div class="empty-hint">还没有生成记录，去首页上传一张房间照片试试吧。</div>` : `
+  ${items.length === 0 ? `<div class="empty-state">
+    <div class="empty-icon">${ICONS.heart}</div>
+    <h2>待收藏</h2>
+    <p>保存后的生成方案会出现在这里，方便随时回来查看。</p>
+  </div>` : `
   <div class="history-list">
     ${items.map((h,idx) => `
       <div class="history-row" data-histitem="${idx}">
@@ -2256,6 +2266,55 @@ function renderHistory(){
           <div class="meta">${h.time} · ${h.count} 个方案</div>
         </div>
       </div>`).join('')}
+  </div>`}`;
+}
+
+function favoriteStyleEntries(){
+  const byStyle = new Map();
+  state.favoriteInsp.forEach(seed => {
+    const item = INSPIRATION.find(entry => entry.seed === seed);
+    if(!item || byStyle.has(item.styleId)) return;
+    byStyle.set(item.styleId, {
+      styleId:item.styleId,
+      name:item.tag || item.name,
+      img:item.img || IMG(item.seed,500,item.h),
+      meta:'来自灵感收藏'
+    });
+  });
+  state.favoriteResultStyles.forEach(styleId => {
+    if(byStyle.has(styleId)) return;
+    const style = STYLES.find(item => item.id === styleId);
+    if(!style) return;
+    byStyle.set(styleId, {
+      styleId,
+      name:style.name,
+      img:styleImage(styleId,0),
+      meta:'来自生成方案'
+    });
+  });
+  return Array.from(byStyle.values());
+}
+
+function renderFavorites(){
+  const items = favoriteStyleEntries();
+  return `
+  <div class="topbar">
+    <button class="icon-btn" data-nav="profile">${ICONS.back}</button>
+    <div class="title">收藏风格</div>
+    <div style="width:36px"></div>
+  </div>
+  ${items.length === 0 ? `<div class="empty-state">
+    <div class="empty-icon">${ICONS.heart}</div>
+    <h2>待收藏</h2>
+    <p>在灵感图片或生成方案中点击爱心，喜欢的风格会收在这里。</p>
+  </div>` : `<div class="favorite-grid">
+    ${items.map(item => `<button class="favorite-card" data-favorite-style="${item.styleId}">
+      <img src="${item.img}" alt="${item.name}" />
+      <div class="favorite-card-copy">
+        <div class="name">${item.name}</div>
+        <div class="meta">${item.meta}</div>
+      </div>
+    </button>`).join('')}
   </div>`}`;
 }
 
@@ -2275,9 +2334,9 @@ function renderProfile(){
         <div class="text"><div class="label">历史生成</div><div class="count">${state.historyItems.length} 条记录</div></div>
       </div><span class="chevron">${ICONS.chevron}</span>
     </div>
-    <div class="profile-row" data-action="fav-toast">
+    <div class="profile-row" data-nav="favorites">
       <div class="left"><div class="icon">${ICONS.heart}</div>
-        <div class="text"><div class="label">收藏风格</div><div class="count">${state.favoriteInsp.size + state.favoriteResultStyles.size} 个风格</div></div>
+        <div class="text"><div class="label">收藏风格</div><div class="count">${favoriteStyleEntries().length} 个风格</div></div>
       </div><span class="chevron">${ICONS.chevron}</span>
     </div>
     <div class="profile-row" data-action="archive-toast">
@@ -2394,9 +2453,29 @@ function attachHandlers(){
     document.querySelectorAll('[data-histitem]').forEach(el=>{
       el.addEventListener('click', ()=>{
         const item = state.historyItems[Number(el.getAttribute('data-histitem'))];
+        if(!item) return;
         state.selectedStyle = item && item.style ? item.style : 'cream';
         state.resultTab = 'A';
+        const style = STYLES.find(entry => entry.id === state.selectedStyle);
+        state.generatedPlans = { A: {
+          id:state.selectedStyle,
+          name:style ? style.name : '家具风格',
+          desc:style ? style.desc : '',
+          after:item.img
+        }};
         nav('result');
+      });
+    });
+  }
+  if(state.page === 'favorites'){
+    document.querySelectorAll('[data-favorite-style]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const styleId = el.getAttribute('data-favorite-style');
+        const style = STYLES.find(item => item.id === styleId);
+        if(!style) return;
+        state.selectedStyle = styleId;
+        state._styleCat = style.name;
+        nav('style');
       });
     });
   }
@@ -2410,7 +2489,7 @@ function attachHandlers(){
       refineInput.addEventListener('keydown', event=>{
         if(event.key !== 'Enter' || event.isComposing) return;
         event.preventDefault();
-        document.querySelector('[data-action="submit-refinement"]')?.click();
+        document.querySelector('[data-action="regenerate"]')?.click();
       });
     }
     setupCompareSlider();
@@ -2505,25 +2584,21 @@ function handleAction(action, el){
       nav('generating');
       break;
     case 'regenerate':
-      nav('style');
+      state.pendingRefinement = String(state.refinementText || '').trim();
+      state.generatedPlans = null;
+      state.generationMeta = null;
+      state.generationRunId++;
+      nav('generating');
       break;
-    case 'submit-refinement': {
-      const instruction = String(state.refinementText || '').trim();
-      if(!instruction){
-        showToast('请描述想调整的家具、颜色或材质');
-        return;
-      }
-      state.pendingRefinement = instruction;
-      showToast('已记录调整要求，局部生成模型确认后即可执行', 2600);
-      break;
-    }
     case 'save-result': {
       const plan = planFor(state.resultTab);
-      state.historyItems.unshift({
-        img: plan.after,
-        name:`我的房间 · ${plan.name}改造`,
-        time:'刚刚', count:1, style:plan.id
-      });
+      if(!state.historyItems.some(item => item.img === plan.after)){
+        state.historyItems.unshift({
+          img: plan.after,
+          name:`我的房间 · ${plan.name}改造`,
+          time:'刚刚', count:1, style:plan.id
+        });
+      }
       showToast('已保存到历史');
       break;
     }
@@ -2572,9 +2647,6 @@ function handleAction(action, el){
       render();
       break;
     }
-    case 'fav-toast':
-      showToast('收藏风格功能开发中');
-      break;
     case 'archive-toast':
       showToast('空间档案功能开发中');
       break;

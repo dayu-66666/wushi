@@ -1160,6 +1160,9 @@ function makeKontextPrompt(input, styleId) {
   return [
     input.directVisualReference ? "IMAGE 1 is the user's immutable room photograph. IMAGE 2 is the chosen inspiration reference." : "",
     "Edit this exact room photograph into a furnished living room; do not create a different room.",
+    input.refinementInstruction
+      ? `The user requested this change for the new variation: ${String(input.refinementInstruction).slice(0, 240)}. Prioritize this request while keeping the same selected style, complete living-room furniture recipe, safe layout and immutable architecture.`
+      : "Generate a fresh complete variation in the selected style.",
     input.directVisualReference ? "Read IMAGE 2 directly. Recreate every suitable visible furniture or decor object from IMAGE 2 as a close-looking piece in IMAGE 1, preserving its silhouette, color, material, proportions and distinctive details. Adapt scale and placement to IMAGE 1. For mandatory objects absent from IMAGE 2, create complementary pieces in the same style." : "",
     input.directVisualReference ? "Never transfer IMAGE 2's walls, floor, ceiling, doors, windows, camera angle, lighting geometry or furniture coordinates. IMAGE 1 alone controls all architecture and perspective." : "",
     assignments.join(" "),
