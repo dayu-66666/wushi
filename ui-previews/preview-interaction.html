@@ -969,6 +969,10 @@
     background:var(--forest); color:var(--cream);
     font-size:11.5px; font-weight:700; text-decoration:none;
   }
+  .buy-link.disabled{
+    background:rgba(255,255,255,.08); color:var(--ink-soft);
+    cursor:default; pointer-events:none;
+  }
   .shop-note{font-size:11.5px; color:var(--ink-soft); padding:12px 18px 4px; line-height:1.6;}
   .shop-actions{display:flex; gap:12px; padding:18px 18px 30px;}
   .shop-actions .btn-primary, .shop-actions .btn-secondary{flex:1;}
@@ -2151,7 +2155,6 @@ function generatedItemCropStyle(image, zone){
 function renderShoppingList(){
   const plan = planFor('A');
   const items = FURNITURE_LISTS[plan.id] || FURNITURE_LISTS.custom;
-  const total = items.reduce((sum, it) => sum + it.price, 0);
   return `
   <div class="topbar">
     <button class="icon-btn" data-action="back">${ICONS.back}</button>
@@ -2165,29 +2168,25 @@ function renderShoppingList(){
   </div>
   <div class="shop-summary">
     <div>
-      <div class="label">共 ${items.length} 件搭配</div>
-      <div class="value">预估合计 ¥${total.toLocaleString()}</div>
+      <div class="label">本方案搭配</div>
+      <div class="value">共 ${items.length} 件</div>
     </div>
     <button class="btn-secondary" data-action="share-list">分享搭配</button>
   </div>
   <div class="shop-list">
-    ${items.map(it => {
-      const cropStyle = generatedItemCropStyle(plan.after, shoppingZoneForItem(it));
-      return `
+    ${items.map(it => `
       <div class="shop-item">
-        <div class="shop-thumb ${cropStyle ? 'has-image' : (it.icon || 'sofa')}" style="${cropStyle}">${cropStyle ? '' : shopIcon(it.icon)}</div>
+        <div class="shop-thumb ${it.icon || 'sofa'}">${shopIcon(it.icon)}</div>
         <div class="shop-info">
           <div class="name">${it.name}</div>
           <span class="tag">${it.tag}</span>
         </div>
         <div class="shop-side">
-          <div class="shop-price">¥${it.price.toLocaleString()}</div>
-          <a class="buy-link" href="${shoppingUrl(it.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">购买链接</a>
+          <span class="buy-link disabled">购买链接 · 待开放</span>
         </div>
-      </div>`;
-    }).join('')}
+      </div>`).join('')}
   </div>
-  <div class="shop-note">* 当前图片来自生成方案，价格为 AI 预估参考价；真实商品匹配将在后续阶段接入。</div>
+  <div class="shop-note">* 单品识别与购买链接将在后续版本开放，当前清单为该风格的搭配示意。</div>
   <div class="shop-actions">
     <button class="btn-secondary" data-action="save-list">保存搭配</button>
     <button class="btn-primary" data-action="copy-list">复制搭配清单</button>
@@ -2638,7 +2637,7 @@ function handleAction(action, el){
     case 'copy-list': {
       const plan = planFor('A');
       const items = FURNITURE_LISTS[plan.id] || FURNITURE_LISTS.custom;
-      const text = items.map(it=>`${it.name}（${it.tag}）约 ¥${it.price}`).join('\n');
+      const text = items.map(it=>`${it.name}（${it.tag}）`).join('\n');
       if(navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(text).then(()=> showToast('搭配清单已复制'))
           .catch(()=> showToast('搭配清单已生成，可截图保存'));
