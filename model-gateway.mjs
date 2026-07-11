@@ -1729,26 +1729,52 @@ async function generateWithStructureSafeInpaint(input) {
   return result;
 }
 
+// Request payload per model family. nano-banana and gpt-image get no explicit
+// aspect ratio: their "auto" follows the input photo, which is what structure
+// preservation wants.
+function falEditRequestBody(model, { references, prompt, aspectRatio }) {
+  const multi = references.length > 1;
+  if (model.includes("nano-banana")) {
+    return {
+      prompt,
+      image_urls: references,
+      num_images: 1,
+      output_format: "jpeg"
+    };
+  }
+  if (model.startsWith("openai/gpt-image")) {
+    return {
+      prompt,
+      image_urls: references,
+      num_images: 1,
+      output_format: "jpeg",
+      quality: process.env.GPT_IMAGE_QUALITY || "high",
+      image_size: "auto"
+    };
+  }
+  return {
+    ...(multi ? { image_urls: references } : { image_url: references[0] }),
+    prompt,
+    guidance_scale: Number(process.env.FAL_EDIT_GUIDANCE || 4.5),
+    num_images: 1,
+    output_format: "jpeg",
+    safety_tolerance: process.env.FAL_SAFETY_TOLERANCE || "2",
+    enhance_prompt: false,
+    aspect_ratio: aspectRatio
+  };
+}
+
 async function callFalKontext({ key, model, imageUrl, imageUrls, prompt, aspectRatio }) {
   const references = Array.isArray(imageUrls) && imageUrls.length ? imageUrls.filter(Boolean) : [imageUrl].filter(Boolean);
-  const multi = references.length > 1;
   const res = await fetch(`https://fal.run/${model}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Key ${key}`
     },
-    body: JSON.stringify({
-      ...(multi ? { image_urls: references } : { image_url: references[0] }),
-      prompt,
-      guidance_scale: Number(process.env.FAL_EDIT_GUIDANCE || 4.5),
-      num_images: 1,
-      output_format: "jpeg",
-      safety_tolerance: process.env.FAL_SAFETY_TOLERANCE || "2",
-      enhance_prompt: false,
-      aspect_ratio: aspectRatio
-    }),
-    signal: AbortSignal.timeout(Number(process.env.FAL_REQUEST_TIMEOUT_MS || 120000))
+    body: JSON.stringify(falEditRequestBody(model, { references, prompt, aspectRatio })),
+    signal: AbortSignal.timeout(Number(process.env.FAL_REQUEST_TIMEOUT_MS
+      || (model.startsWith("openai/gpt-image") ? 300000 : 120000)))
   });
 
   const body = await res.json().catch(() => ({}));
@@ -1765,14 +1791,20 @@ async function generateWithFalKontext(input) {
   if (!key) throw new Error("FAL_KEY missing");
   if (!input.roomImage) throw new Error("roomImage missing for Kontext editing");
 
-  const hasVisualReference = Boolean(input.styleReferenceImage && process.env.ENABLE_MULTI_REFERENCE === "true");
+  // editModelOverride switches the whole generation to a configurable image-edit
+  // model (nano-banana, gpt-image-2, ...) that sees the reference image directly.
+  const overrideModel = typeof input.editModelOverride === "string" && input.editModelOverride.trim()
+    ? input.editModelOverride.trim()
+    : null;
+  const hasVisualReference = Boolean(input.styleReferenceImage
+    && (overrideModel || process.env.ENABLE_MULTI_REFERENCE === "true"));
   const kontextInput = { ...input, directVisualReference: hasVisualReference };
   if (kontextInput.refinementInstruction) {
     kontextInput.refinementInstruction = await translateRefinementInstruction(String(kontextInput.refinementInstruction).slice(0, 240));
   }
-  const model = hasVisualReference
+  const model = overrideModel || (hasVisualReference
     ? (process.env.FAL_MULTI_EDIT_MODEL || "fal-ai/flux-pro/kontext/multi")
-    : (process.env.FAL_EDIT_MODEL || "fal-ai/flux-pro/kontext");
+    : (process.env.FAL_EDIT_MODEL || "fal-ai/flux-pro/kontext"));
   const styleId = input.styleId || "cream";
   const prompt = makeKontextPrompt(kontextInput, styleId);
   const aspectRatio = nearestKontextAspectRatio(input.roomMaskMeta);
@@ -1820,7 +1852,7 @@ async function generateWithFalKontext(input) {
   }
 
   const result = mockPlans(input);
-  result.provider = hasVisualReference ? "fal_kontext_multi" : "fal_kontext";
+  result.provider = overrideModel ? "fal_image_edit" : (hasVisualReference ? "fal_kontext_multi" : "fal_kontext");
   result.model = model;
   result.seed = selected.body.seed || null;
   result.timings = selected.body.timings || null;
@@ -1972,6 +2004,22 @@ async function handleGenerate(req, res) {
     }
   }
 
+  if (provider === "fal_image_edit") {
+    try {
+      if (input.generationMode === "local_refinement" && input.baseResultImage) {
+        return json(res, 200, await refineWithFalKontext(input));
+      }
+      return json(res, 200, await generateWithFalKontext({
+        ...input,
+        skipRepair: true,
+        editModelOverride: process.env.FAL_IMAGE_EDIT_MODEL || "fal-ai/nano-banana/edit"
+      }));
+    } catch (err) {
+      console.error("[gateway] fal image edit failed:", err.message);
+      return json(res, 502, { error: err.message || "fal image edit failed" });
+    }
+  }
+
   return json(res, 200, mockPlans(input));
 }
 
@@ -2003,9 +2051,11 @@ const server = http.createServer(async (req, res) => {
         hasFalKey: Boolean(process.env.FAL_KEY),
         hasDeepSeekKey: Boolean(process.env.DEEPSEEK_API_KEY),
         textProvider: process.env.TEXT_PROVIDER || null,
-        imageModel: process.env.MODEL_PROVIDER === "fal_kontext"
-          ? (process.env.FAL_EDIT_MODEL || "fal-ai/flux-pro/kontext")
-          : (process.env.OPENROUTER_IMAGE_MODEL || process.env.FAL_INPAINT_MODEL || process.env.FAL_MODEL || null),
+        imageModel: process.env.MODEL_PROVIDER === "fal_image_edit"
+          ? (process.env.FAL_IMAGE_EDIT_MODEL || "fal-ai/nano-banana/edit")
+          : process.env.MODEL_PROVIDER === "fal_kontext"
+            ? (process.env.FAL_EDIT_MODEL || "fal-ai/flux-pro/kontext")
+            : (process.env.OPENROUTER_IMAGE_MODEL || process.env.FAL_INPAINT_MODEL || process.env.FAL_MODEL || null),
         visionModel: process.env.OPENROUTER_API_KEY
           ? (process.env.OPENROUTER_VISION_MODEL || "qwen/qwen3-vl-32b-instruct")
           : null
