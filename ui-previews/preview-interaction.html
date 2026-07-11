@@ -11,13 +11,13 @@
     --cream:#050505;
     --paper:#111111;
     --ink:#F4F1EA;
-    --ink-soft:#A8A19A;
+    --ink-soft:#9A938B;
     --forest:#F4F1EA;
     --forest-dark:#050505;
     --forest-tint:#1B1B1B;
-    --gold:#C3BAAD;
+    --gold:#B7A58C;
     --gold-tint:#1A1816;
-    --line:#2A2927;
+    --line:#292622;
     --amber:#D6C8B8;
     --amber-tint:#211E1B;
     --shadow:none;
@@ -515,6 +515,99 @@
     color:#050505;
     border-color:#F4F1EA;
   }
+  .photo-check-page{
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    background:var(--cream);
+  }
+  .photo-check-media{
+    position:relative;
+    height:430px;
+    margin:0 12px;
+    overflow:hidden;
+    border-radius:8px;
+    background:#111;
+  }
+  .photo-check-media img{width:100%;height:100%;display:block;object-fit:cover;}
+  .photo-check-media::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.36));
+    pointer-events:none;
+  }
+  .photo-check-index{
+    position:absolute;
+    left:14px;
+    bottom:14px;
+    z-index:1;
+    font-size:11px;
+    letter-spacing:.12em;
+    color:rgba(244,241,234,.82);
+  }
+  .photo-check-body{padding:22px 20px 28px;}
+  .photo-check-eyebrow{
+    margin-bottom:8px;
+    font-size:11px;
+    letter-spacing:.15em;
+    color:var(--gold);
+  }
+  .photo-check-title{
+    margin:0;
+    font-family:var(--font-serif);
+    font-size:25px;
+    font-weight:600;
+    line-height:1.3;
+    color:var(--ink);
+  }
+  .photo-check-copy{
+    margin:8px 0 0;
+    font-size:13px;
+    line-height:1.7;
+    color:var(--ink-soft);
+  }
+  .photo-check-progress{
+    height:1px;
+    margin:22px 0 0;
+    overflow:hidden;
+    background:var(--line);
+  }
+  .photo-check-progress span{
+    display:block;
+    width:38%;
+    height:100%;
+    background:var(--ink);
+    animation:photoCheck 1.2s ease-in-out infinite alternate;
+  }
+  @keyframes photoCheck{from{transform:translateX(-80%)}to{transform:translateX(240%)}}
+  .photo-check-list{
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+    margin:18px 0 0;
+    padding:0;
+    list-style:none;
+  }
+  .photo-check-list li{
+    position:relative;
+    padding-left:15px;
+    font-size:12.5px;
+    line-height:1.55;
+    color:#C9C2B8;
+  }
+  .photo-check-list li::before{
+    content:'';
+    position:absolute;
+    left:0;
+    top:.65em;
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background:var(--gold);
+  }
+  .photo-check-actions{display:flex;gap:10px;margin-top:22px;}
+  .photo-check-actions button{flex:1;}
   .level-mark{
     width:24px;
     height:14px;
@@ -704,11 +797,18 @@
   .gen-step .mark{
     width:24px;height:24px;border-radius:50%; flex-shrink:0;
     display:flex;align-items:center;justify-content:center;
-    background:var(--line); color:var(--ink-soft);
-    font-size:11px; font-weight:700;
+    background:#f4f1ea; color:#16130f;
+    border:1px solid rgba(244,241,234,.92);
+    font-size:12.5px; font-weight:800;
   }
-  .gen-step.active .mark{background:var(--forest); color:#fff;}
-  .gen-step.done .mark{background:var(--forest); color:#fff;}
+  .gen-step.active .mark,
+  .gen-step.done .mark{
+    background:#f4f1ea;
+    color:#16130f;
+    border:2px solid var(--forest);
+    font-size:12.5px;
+    font-weight:800;
+  }
   .gen-step .label{font-size:13.5px; color:var(--ink-soft); font-weight:600;}
   .gen-step.active .label, .gen-step.done .label{color:var(--ink);}
   .gen-progress-track{width:100%; height:6px; border-radius:999px; background:var(--line); overflow:hidden;}
@@ -761,6 +861,60 @@
   .result-meta{padding:8px 18px 6px;}
   .result-meta .name{font-family:var(--font-serif); font-weight:600; font-size:17px; margin-bottom:4px;}
   .result-meta .desc{font-size:13px; color:var(--ink-soft); line-height:1.6;}
+  .refine-panel{
+    margin:12px 18px 2px;
+    padding:15px;
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    background:#0D0D0D;
+  }
+  .refine-title{
+    font-family:var(--font-serif);
+    font-size:16px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .refine-sub{
+    margin-top:4px;
+    font-size:11.5px;
+    line-height:1.55;
+    color:var(--ink-soft);
+  }
+  .refine-compose{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:12px;
+    padding:5px 5px 5px 13px;
+    border-radius:999px;
+    background:#181818;
+    border:1px solid #302D29;
+  }
+  .refine-input{
+    min-width:0;
+    flex:1;
+    height:36px;
+    padding:0;
+    border:0;
+    outline:none;
+    background:transparent;
+    color:var(--ink);
+    font:13px var(--font-sans);
+  }
+  .refine-input::placeholder{color:#716B64;}
+  .refine-send{
+    width:36px;
+    height:36px;
+    flex:0 0 36px;
+    padding:0;
+    border:0;
+    border-radius:50%;
+    background:var(--ink);
+    color:var(--cream);
+    font-size:19px;
+    line-height:1;
+    cursor:pointer;
+  }
   .result-actions{display:flex; gap:12px; padding:14px 18px 6px;}
   .result-actions .btn-primary, .result-actions .btn-secondary{flex:1;}
   .shop-entry{
@@ -800,6 +954,11 @@
     border:1px solid rgba(255,255,255,.08);
     overflow:hidden;
   }
+  .shop-thumb.has-image{
+    background-repeat:no-repeat;
+    background-color:#171717;
+  }
+  .shop-thumb.has-image svg{display:none;}
   .shop-thumb svg{width:34px;height:34px;display:block;color:#f6f1e8;}
   .shop-thumb.sofa{background:linear-gradient(145deg,#d7c4ac,#8b735d);}
   .shop-thumb.table{background:linear-gradient(145deg,#c7a36e,#57402c);}
@@ -819,7 +978,7 @@
   .shop-price{font-weight:700; font-size:13.5px; color:var(--forest); white-space:nowrap; flex-shrink:0;}
   .buy-link{
     display:inline-flex; align-items:center; justify-content:center;
-    min-width:52px; height:28px; border-radius:999px;
+    min-width:76px; height:28px; padding:0 10px; border-radius:999px;
     background:var(--forest); color:var(--cream);
     font-size:11.5px; font-weight:700; text-decoration:none;
   }
@@ -828,24 +987,37 @@
   .shop-actions .btn-primary, .shop-actions .btn-secondary{flex:1;}
 
   /* ===== INSPIRATION (waterfall) ===== */
-  .chip-row{
-    display:grid;
-    grid-template-columns:repeat(4, 1fr);
-    column-gap:10px;
-    row-gap:12px;
-    padding:10px 20px 18px;
-    overflow:visible;
+  .inspiration-page{
+    min-height:100%;
+    background:#050505;
+    color:var(--ink);
   }
-  .chip-row .chip{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-width:0;
-    min-height:40px;
-    padding:8px 4px;
-    text-align:center;
+  .inspiration-head{
+    padding:38px 18px 26px;
+  }
+  .inspiration-brand{
+    font-family:var(--font-serif);
+    font-size:15px;
+    font-weight:600;
+    letter-spacing:.12em;
+    color:#D7CEC2;
+    margin-bottom:18px;
+  }
+  .inspiration-title{
+    font-family:var(--font-serif);
+    font-size:46px;
+    font-weight:500;
+    line-height:1;
+    letter-spacing:.02em;
+    color:#F1E9DE;
+    margin:0 0 13px;
+  }
+  .inspiration-sub{
+    margin:0;
     font-size:13px;
-    line-height:1.2;
+    line-height:1.6;
+    letter-spacing:.02em;
+    color:#817B75;
   }
   .style-chip-row{
     display:grid;
@@ -867,44 +1039,155 @@
     line-height:1.2;
   }
   .waterfall{
-    display:grid;
-    grid-template-columns:repeat(2, minmax(0, 1fr));
-    gap:12px;
-    padding:0 18px 100px;
+    columns:2;
+    column-gap:4px;
+    padding:0 12px 112px;
   }
   .wf-card{
     position:relative;
+    display:block;
+    width:100%;
     min-width:0;
-    border-radius:var(--radius-md);
-    overflow:hidden; background:var(--paper); box-shadow:var(--shadow); cursor:pointer;
-    border:1px solid var(--line);
+    margin:0 0 6px;
+    break-inside:avoid;
+    border-radius:6px;
+    overflow:hidden;
+    background:#111;
+    box-shadow:none;
+    cursor:pointer;
+    border:none;
+    padding:0;
+    appearance:none;
+    text-align:initial;
+    transition:transform .18s ease, opacity .18s ease;
+  }
+  .wf-card:active{
+    transform:scale(.985);
+    opacity:.92;
   }
   .wf-card img{
     width:100%;
-    height:172px !important;
+    height:var(--insp-height, 220px) !important;
     display:block;
     object-fit:cover;
   }
-  .wf-card .body{padding:11px 11px 13px; min-height:116px;}
-  .wf-card .name{font-weight:600; font-size:13.5px; margin-bottom:5px; color:var(--ink);}
-  .wf-card .tag{
-    display:inline-flex; align-items:center; justify-content:center;
-    min-width:54px; height:22px;
-    font-size:10.5px; font-weight:600; color:var(--gold);
-    background:var(--gold-tint); padding:0 8px; border-radius:999px; margin-bottom:8px;
-    white-space:nowrap;
+  .inspiration-detail{
+    position:relative;
+    min-height:100%;
+    padding-bottom:40px;
+    background:var(--cream);
   }
-  .wf-card .desc{font-size:11.5px; color:var(--ink-soft); line-height:1.45;}
-  .wf-heart{
-    position:absolute; top:10px; right:10px; z-index:2;
-    width:30px;height:30px;border-radius:50%;
-    background:rgba(20,18,14,0.42);
-    color:#fff;
-    display:flex; align-items:center; justify-content:center;
-    border:none; cursor:pointer;
+  .inspiration-detail-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 16px 14px;
   }
-  .wf-heart svg{width:15px;height:15px;}
-  .wf-heart.active{background:rgba(255,255,255,0.94); color:var(--amber);}
+  .inspiration-detail-kicker{
+    font-family:var(--font-serif);
+    font-size:15px;
+    letter-spacing:.12em;
+    color:var(--ink);
+  }
+  .inspiration-detail-media{
+    display:block;
+    width:calc(100% - 24px);
+    margin:0 12px;
+    padding:0;
+    overflow:hidden;
+    border:0;
+    border-radius:8px;
+    background:var(--paper);
+    cursor:zoom-in;
+  }
+  .inspiration-detail-media img{
+    display:block;
+    width:100%;
+    max-height:548px;
+    object-fit:cover;
+  }
+  .inspiration-detail-copy{padding:22px 18px 20px;}
+  .inspiration-detail-title{
+    margin:0 0 8px;
+    font-family:var(--font-serif);
+    font-size:25px;
+    font-weight:600;
+    line-height:1.25;
+    color:var(--ink);
+  }
+  .inspiration-detail-desc{
+    margin:0;
+    font-size:13px;
+    line-height:1.75;
+    letter-spacing:.02em;
+    color:var(--ink-soft);
+  }
+  .inspiration-detail-action{padding:0 18px;}
+  .inspiration-detail-action .btn-primary{width:100%; min-height:50px;}
+  .inspiration-zoom{
+    position:absolute;
+    inset:0;
+    z-index:240;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100%;
+    overflow:hidden;
+    background:#000;
+    touch-action:none;
+  }
+  .inspiration-zoom-stage{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    touch-action:none;
+    cursor:zoom-in;
+  }
+  .inspiration-zoom-stage img{
+    display:block;
+    width:100%;
+    max-height:100%;
+    object-fit:contain;
+    transform:scale(1);
+    transform-origin:center;
+    transition:transform .2s ease;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+  .inspiration-zoom-close{
+    position:absolute;
+    top:20px;
+    right:16px;
+    z-index:2;
+    background:rgba(18,18,18,.72);
+    backdrop-filter:blur(10px);
+  }
+  .inspiration-zoom-close::before,
+  .inspiration-zoom-close::after{
+    content:'';
+    position:absolute;
+    width:15px;
+    height:1.5px;
+    border-radius:2px;
+    background:currentColor;
+  }
+  .inspiration-zoom-close::before{transform:rotate(45deg);}
+  .inspiration-zoom-close::after{transform:rotate(-45deg);}
+  .inspiration-zoom-hint{
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:28px;
+    z-index:2;
+    text-align:center;
+    font-size:11px;
+    letter-spacing:.08em;
+    color:rgba(244,241,234,.6);
+    pointer-events:none;
+  }
   .icon-btn.fav-toggle.active{background:var(--gold-tint); color:var(--amber);}
 
   /* ===== HISTORY ===== */
@@ -975,6 +1258,7 @@ const IMG = (seed, w=800, h=1000) => `https://picsum.photos/seed/${seed}/${w}/${
 const ASSET = path => location.protocol === 'file:' ? `../${path}` : `/${path}`;
 const MODEL_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/generate' : '/api/generate';
 const ROOM_ANALYZE_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/analyze-room' : '/api/analyze-room';
+const STYLE_ANALYZE_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/analyze-style' : '/api/analyze-style';
 const STYLE_IMAGE_COUNTS = {
   cream: 5,
   wood: 5,
@@ -1010,6 +1294,7 @@ const INSPIRATION = STYLES.flatMap(style =>
     seed: `${style.id}-${index + 1}`,
     h: [238, 292, 254, 316, 272, 300, 246][index % 7],
     name: `${style.name}灵感 ${String(index + 1).padStart(2, '0')}`,
+    styleId: style.id,
     tag: style.name,
     desc: style.desc,
     img,
@@ -1156,10 +1441,14 @@ const state = {
   stack: [],
   photo: null,           // dataURL or picsum url of the user's captured/uploaded room
   roomMask: null,        // generated inpainting mask for furniture placement area
+  roomZoneMasks: null,   // staged masks that prevent the generator from redrawing the full room
   roomMaskMeta: null,    // white editable coverage and zone diagnostics
   layoutPlan: null,      // visual-model furniture layout plan, with a local fallback
   roomAnalysis: null,    // cached room analysis for the current uploaded photo
   roomAnalysisPromise: null,
+  photoQuality: null,
+  refinementText: '',
+  pendingRefinement: '',
   compStatus: 'good',    // camera composition status
   selectedStyle: null,
   customStyle: null,   // { img: dataURL } uploaded reference image for style-select page
@@ -1167,6 +1456,10 @@ const state = {
   resultTab: 'A',
   historyItems: [...HISTORY],
   favoriteInsp: new Set(),
+  selectedInspiration: null,
+  inspirationZoomOpen: false,
+  inspirationZoomScale: 1,
+  inspirationAnalysisPromise: null,
   favoriteResultStyles: new Set(),
   generatedPlans: null,
   generationMeta: null,
@@ -1210,12 +1503,12 @@ function createLayoutPlan(width, height){
     ],
     placementRules: [
       'exactly one main sofa, placed close to and parallel with the usable wall',
-      'exactly one accent lounge chair, angled toward the sofa and coffee table, outside the walking path',
+      'exactly one accent lounge chair, set at a natural 35-to-45-degree angle toward the coffee table and conversation center, outside the walking path',
       'one coffee table only',
       'one rug under the seating area',
-      'one low TV console or media cabinet on the opposite wall if there is a usable wall',
+      'one low TV console or media cabinet on the opposite wall with a correctly scaled television above it if there is a usable wall',
       'one floor lamp or side lamp near the sofa',
-      'one restrained wall artwork on an empty wall',
+      'one style-appropriate art treatment behind the sofa, using a statement work, diptych, triptych, restrained gallery wall, or art with wall sconces',
       'do not edit the ceiling light or curtains until the room vision plan marks them safe',
       'keep the far window or balcony area open',
       'keep a clear walking path from the camera side toward the far opening',
@@ -1224,10 +1517,10 @@ function createLayoutPlan(width, height){
     ],
     zones: {
       sofa: { x: 0.58, y: 0.53, w: 0.34, h: 0.28, role: 'main sofa placed close to the right usable wall, parallel to that wall, facing room center' },
-      accentChair: { x: 0.14, y: 0.68, w: 0.16, h: 0.19, role: 'one compact accent lounge chair angled toward the sofa and coffee table, outside the central walking path' },
+      accentChair: { x: 0.14, y: 0.68, w: 0.16, h: 0.19, role: 'one compact accent lounge chair at a natural 35-to-45-degree angle toward the coffee table and conversation center, outside the central walking path' },
       rugTable: { x: 0.30, y: 0.66, w: 0.42, h: 0.24, role: 'rug and single coffee table centered in front of the sofa, scaled to the floor perspective' },
-      mediaConsole: { x: 0.10, y: 0.57, w: 0.24, h: 0.16, role: 'low TV console or media cabinet along the opposite left wall, kept shallow and aligned with wall perspective' },
-      wallArt: { x: 0.13, y: 0.34, w: 0.20, h: 0.16, role: 'one restrained framed artwork on the empty left wall above the console' },
+      mediaConsole: { x: 0.10, y: 0.57, w: 0.24, h: 0.16, role: 'low TV console or media cabinet along the opposite left wall with a correctly scaled television above it, kept shallow and aligned with wall perspective' },
+      wallArt: { x: 0.58, y: 0.34, w: 0.26, h: 0.16, role: 'an adaptive art treatment on the safe wall behind the sofa, composed according to the wall proportions and selected style' },
       decor: { x: 0.47, y: 0.51, w: 0.14, h: 0.20, role: 'slim floor lamp or plant beside the sofa, not in the walkway' }
     },
     forbiddenZones: {
@@ -1259,32 +1552,45 @@ function createFurnitureMask(imgSrc, suppliedPlan=null){
       const width = image.naturalWidth || 900;
       const height = image.naturalHeight || 1400;
       const plan = suppliedPlan || createLayoutPlan(width, height);
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, width, height);
-
       const zones = plan.zones || {};
-      ctx.fillStyle = '#fff';
+      const drawMask = (keys) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#fff';
+        keys.forEach((key) => {
+          const zone = zones[key];
+          if(!zone || !Number.isFinite(Number(zone.x)) || !Number.isFinite(Number(zone.y)) || !Number.isFinite(Number(zone.w)) || !Number.isFinite(Number(zone.h))) return;
+          roundRectPath(ctx, Number(zone.x) * width, Number(zone.y) * height, Number(zone.w) * width, Number(zone.h) * height, width * (key === 'lighting' || key === 'wallArt' ? 0.025 : 0.045));
+          ctx.fill();
+        });
+        ctx.fillStyle = '#000';
+        Object.entries(plan.forbiddenZones || {}).forEach(([key, zone]) => {
+          if(!zone || !Number.isFinite(Number(zone.x)) || !Number.isFinite(Number(zone.y)) || !Number.isFinite(Number(zone.w)) || !Number.isFinite(Number(zone.h))) return;
+          const label = `${key} ${zone.role || ''}`.toLowerCase();
+          const isCirculation = /(circulation|walking|walkway|path|通行|动线)/.test(label);
+          const isHardOpening = /(door|window|balcony|opening|门|窗|阳台)/.test(label);
+          if(isCirculation || !isHardOpening) return;
+          roundRectPath(ctx, Number(zone.x) * width, Number(zone.y) * height, Number(zone.w) * width, Number(zone.h) * height, width * 0.02);
+          ctx.fill();
+        });
+        return canvas;
+      };
 
-      Object.entries(zones).forEach(([key, zone]) => {
-        if(!zone || !Number.isFinite(Number(zone.x)) || !Number.isFinite(Number(zone.y)) || !Number.isFinite(Number(zone.w)) || !Number.isFinite(Number(zone.h))) return;
-        roundRectPath(ctx, Number(zone.x) * width, Number(zone.y) * height, Number(zone.w) * width, Number(zone.h) * height, width * (key === 'lighting' || key === 'wallArt' ? 0.025 : 0.045));
-        ctx.fill();
-      });
-
-      ctx.fillStyle = '#000';
-      Object.entries(plan.forbiddenZones || {}).forEach(([key, zone]) => {
-        if(!zone || !Number.isFinite(Number(zone.x)) || !Number.isFinite(Number(zone.y)) || !Number.isFinite(Number(zone.w)) || !Number.isFinite(Number(zone.h))) return;
-        const label = `${key} ${zone.role || ''}`.toLowerCase();
-        const isCirculation = /(circulation|walking|walkway|path|通行|动线)/.test(label);
-        const isHardOpening = /(door|window|balcony|opening|门|窗|阳台)/.test(label);
-        if(isCirculation || !isHardOpening) return;
-        roundRectPath(ctx, Number(zone.x) * width, Number(zone.y) * height, Number(zone.w) * width, Number(zone.h) * height, width * 0.02);
-        ctx.fill();
-      });
+      const canvas = drawMask(Object.keys(zones));
+      const ctx = canvas.getContext('2d');
+      const zoneMasks = [
+        { id:'sofa', zoneKeys:['sofa'], canvas:drawMask(['sofa']) },
+        { id:'center', zoneKeys:['rugTable'], canvas:drawMask(['rugTable']) },
+        { id:'support', zoneKeys:['accentChair','mediaConsole','wallArt','decor'], canvas:drawMask(['accentChair','mediaConsole','wallArt','decor']) }
+      ].filter(group => group.zoneKeys.some(key => zones[key])).map(group => ({
+        id:group.id,
+        zoneKeys:group.zoneKeys.filter(key => zones[key]),
+        mask:group.canvas.toDataURL('image/png')
+      }));
 
       const pixels = ctx.getImageData(0, 0, width, height).data;
       let sampled = 0;
@@ -1296,6 +1602,7 @@ function createFurnitureMask(imgSrc, suppliedPlan=null){
       }
       resolve({
         mask: canvas.toDataURL('image/png'),
+        zoneMasks,
         plan,
         meta: {
           editableCoverage: sampled ? Number((editable / sampled).toFixed(4)) : 0,
@@ -1305,7 +1612,7 @@ function createFurnitureMask(imgSrc, suppliedPlan=null){
         }
       });
     };
-    image.onerror = () => resolve({ mask: null, plan: createLayoutPlan(900, 1400), meta: { editableCoverage: 0, zoneCount: 0, imageWidth: 900, imageHeight: 1400 } });
+    image.onerror = () => resolve({ mask: null, zoneMasks: [], plan: createLayoutPlan(900, 1400), meta: { editableCoverage: 0, zoneCount: 0, imageWidth: 900, imageHeight: 1400 } });
     image.src = imgSrc;
   });
 }
@@ -1314,10 +1621,12 @@ async function setRoomPhoto(img, { preserveReference=false } = {}){
   state.photo = img;
   const layout = await createFurnitureMask(img);
   state.roomMask = layout.mask;
+  state.roomZoneMasks = layout.zoneMasks;
   state.roomMaskMeta = layout.meta;
   state.layoutPlan = layout.plan;
   state.roomAnalysis = null;
   state.roomAnalysisPromise = null;
+  state.photoQuality = { status:'checking', issues:[], retakeGuidance:[] };
   state.generatedPlans = null;
   state.generationMeta = null;
   state.resultTab = 'A';
@@ -1327,8 +1636,17 @@ async function setRoomPhoto(img, { preserveReference=false } = {}){
     if(state.selectedStyle === 'custom') state.selectedStyle = null;
   }
   state.preserveReferenceForNextRoomUpload = false;
+  const selected = STYLES.find(style=>style.id===state.selectedStyle);
+  if(selected) state._styleCat = selected.name;
   nav('style');
-  startRoomAnalysis(img);
+  startRoomAnalysis(img).catch(err=>{
+    console.warn('room analysis unavailable, generation will use the conservative local plan', err);
+    state.photoQuality = {
+      status:'warning',
+      issues:['暂时无法完成自动检查'],
+      retakeGuidance:[]
+    };
+  });
 }
 
 function resizeImageDataUrl(dataUrl, maxDimension=1600, quality=0.88){
@@ -1365,6 +1683,12 @@ function showToast(msg, dur=1900){
   toastTimer = setTimeout(()=> t.classList.remove('show'), dur);
 }
 
+function escapeText(value){
+  return String(value == null ? '' : value).replace(/[&<>'"]/g, char => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;'
+  })[char]);
+}
+
 function localMockGenerationPayload(){
   const base = STYLES.find(s=>s.id===state.selectedStyle) || STYLES[0];
   const idx = Math.max(0, STYLES.indexOf(base));
@@ -1385,20 +1709,58 @@ function localMockGenerationPayload(){
   };
 }
 
+async function prepareInspirationReference(item){
+  if(!item) return null;
+  const activeImage = item.img || IMG(item.seed, 800, item.h);
+  const promise = fetch(STYLE_ANALYZE_API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      styleId:item.styleId || 'custom',
+      styleReferenceImage:activeImage
+    })
+  }).then(async response=>{
+    const data = await response.json().catch(()=> ({}));
+    if(!response.ok) throw new Error(data.error || `style analysis ${response.status}`);
+    if(state.customStyle && state.customStyle.img === activeImage){
+      state.customStyle.sceneSpec = data.styleSpec || null;
+    }
+    return data.styleSpec || null;
+  }).catch(error=>{
+    console.warn('inspiration analysis unavailable; generation will retry', error);
+    return null;
+  }).finally(()=>{
+    if(state.inspirationAnalysisPromise === promise) state.inspirationAnalysisPromise = null;
+  });
+  state.inspirationAnalysisPromise = promise;
+  return promise;
+}
+
 async function requestModelGeneration(){
+  if(state.inspirationAnalysisPromise){
+    await state.inspirationAnalysisPromise.catch(()=> null);
+  }
   const style = STYLES.find(s=>s.id===state.selectedStyle);
-  await ensureRoomAnalysis();
-  const styleRef = state.selectedStyle === 'custom' && state.customStyle
-    ? state.customStyle.img
-    : null;
+  const roomAnalysis = await ensureRoomAnalysis();
+  if(roomAnalysis && roomAnalysis.photoQuality && roomAnalysis.photoQuality.status === 'fail'){
+    throw new Error('这张照片无法识别完整空间，请重新拍摄或上传');
+  }
+  // Preset/reference-gallery images use the fixed backend Style Spec for now.
+  // Only a user-uploaded custom reference enters the visual-reference pipeline.
+  const referenceMatchesSelection = state.customStyle
+    && !state.customStyle.sourceStyleId
+    && state.selectedStyle === 'custom';
+  const styleRef = referenceMatchesSelection ? state.customStyle.img : null;
   const payload = {
     roomImage: state.photo || IMG('camera-room-9',800,1400),
     roomMask: state.roomMask,
+    roomZoneMasks: state.roomZoneMasks,
     roomMaskMeta: state.roomMaskMeta,
     layoutPlan: state.layoutPlan,
     styleId: state.selectedStyle,
     styleName: style ? style.name : '自定义参考风格',
     styleReferenceImage: styleRef,
+    styleSpec: referenceMatchesSelection ? (state.customStyle.sceneSpec || null) : null,
     styleMode: styleRef ? 'custom_reference' : 'preset_json',
     copyReferenceComposition: false,
     outputs: 1,
@@ -1434,13 +1796,21 @@ function startRoomAnalysis(photo){
     });
     if(!res.ok) throw new Error(`room analysis ${res.status}`);
     const analysis = await res.json();
-    if(!analysis.layoutPlan) throw new Error('room analysis returned no layout plan');
-    const layout = await createFurnitureMask(analyzedPhoto, analysis.layoutPlan);
     if(state.photo !== analyzedPhoto) return null;
+    state.photoQuality = analysis.photoQuality || {
+      status:'warning',
+      issues:['照片检查信息不完整'],
+      retakeGuidance:['你仍可继续使用当前照片']
+    };
     state.roomAnalysis = analysis;
-    state.layoutPlan = layout.plan;
-    state.roomMask = layout.mask;
-    state.roomMaskMeta = layout.meta;
+    if(analysis.layoutPlan){
+      const layout = await createFurnitureMask(analyzedPhoto, analysis.layoutPlan);
+      if(state.photo !== analyzedPhoto) return null;
+      state.layoutPlan = layout.plan;
+      state.roomMask = layout.mask;
+      state.roomZoneMasks = layout.zoneMasks;
+      state.roomMaskMeta = layout.meta;
+    }
     return analysis;
   })();
   state.roomAnalysisPromise = promise;
@@ -1464,9 +1834,9 @@ function render(){
   const screen = document.getElementById('screen');
   const navHost = document.getElementById('navHost');
   const renderers = {
-    home: renderHome, camera: renderCamera, style: renderStyle, generating: renderGenerating,
+    home: renderHome, camera: renderCamera, photoCheck: renderPhotoCheck, style: renderStyle, generating: renderGenerating,
     result: renderResult, shoppingList: renderShoppingList,
-    inspiration: renderInspiration, history: renderHistory,
+    inspiration: renderInspiration, inspirationDetail: renderInspirationDetail, history: renderHistory,
     profile: renderProfile,
   };
   screen.innerHTML = renderers[state.page]();
@@ -1537,11 +1907,69 @@ function renderCamera(){
   </div>`;
 }
 
+function renderPhotoCheck(){
+  const quality = state.photoQuality || {status:'checking', issues:[], retakeGuidance:[]};
+  const status = quality.status || 'checking';
+  const content = {
+    checking: {
+      eyebrow:'正在检查',
+      title:'确认这张照片是否适合生成',
+      copy:'正在识别墙面、地面、门窗、光线与空间透视。'
+    },
+    warning: {
+      eyebrow:'可以使用',
+      title:'这张照片可以生成，但还有提升空间',
+      copy:'继续生成没有问题；如果方便重拍，效果可能会更稳定。'
+    },
+    fail: {
+      eyebrow:'需要重拍',
+      title:'这张照片暂时无法可靠生成',
+      copy:'需要看清房间的墙面、地面和主要门窗，才能保持空间结构不变。'
+    }
+  }[status] || {
+    eyebrow:'照片检查',
+    title:'正在确认照片',
+    copy:'请稍候。'
+  };
+  const guidance = [...new Set([...(quality.issues || []), ...(quality.retakeGuidance || [])])].filter(Boolean).slice(0, 4);
+  return `
+  <div class="photo-check-page">
+    <div class="topbar">
+      <button class="icon-btn" data-action="back" aria-label="返回">${ICONS.back}</button>
+      <div class="title">照片检查</div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="photo-check-media">
+      <img src="${state.photo || ''}" alt="待检查的房间照片" />
+      <div class="photo-check-index">ROOM / 01</div>
+    </div>
+    <div class="photo-check-body">
+      <div class="photo-check-eyebrow">${content.eyebrow}</div>
+      <h1 class="photo-check-title">${content.title}</h1>
+      <p class="photo-check-copy">${content.copy}</p>
+      ${status === 'checking' ? `<div class="photo-check-progress"><span></span></div>` : ''}
+      ${guidance.length ? `<ul class="photo-check-list">${guidance.map(item=>`<li>${escapeText(item)}</li>`).join('')}</ul>` : ''}
+      ${status === 'warning' ? `
+        <div class="photo-check-actions">
+          <button class="btn-secondary" data-action="photo-check-retake">重新拍摄</button>
+          <button class="btn-primary" data-action="photo-check-continue">仍然使用</button>
+        </div>` : ''}
+      ${status === 'fail' ? `
+        <div class="photo-check-actions">
+          <button class="btn-primary" data-action="photo-check-retake">重新拍摄</button>
+        </div>` : ''}
+    </div>
+  </div>`;
+}
+
 /* ============ STYLE SELECT ============ */
 function renderStyle(){
   const cats = STYLES.map(s=>s.name);
-  const activeCat = state._styleCat || '';
-  const list = STYLES;
+  const activeCat = state._styleCat || STYLES[0].name;
+  const activeStyle = STYLES.find(style=>style.name===activeCat) || STYLES[0];
+  const activeImages = STYLE_IMAGES[activeStyle.id] || [];
+  const referenceStyleId = state.customStyle ? (state.customStyle.sourceStyleId || 'custom') : null;
+  const referenceSelected = Boolean(referenceStyleId && state.selectedStyle === referenceStyleId);
   return `
   <div class="topbar">
     <button class="icon-btn" data-action="back">${ICONS.back}</button>
@@ -1552,15 +1980,15 @@ function renderStyle(){
     ${cats.map(c => `<button class="chip ${c===activeCat?'active':''}" data-cat="${c}">${c}</button>`).join('')}
   </div>
   <div class="style-grid">
-    ${state.customStyle ? `
-      <div class="style-card upload-card ${state.selectedStyle==='custom'?'selected':''}" data-style="custom" style="display:block; padding:12px; border-style:solid;">
+    ${state.customStyle && !state.customStyle.sourceStyleId ? `
+      <div class="style-card upload-card ${referenceSelected?'selected':''}" data-style="custom" style="display:block; padding:12px; border-style:solid;">
         <div style="display:flex; gap:12px; align-items:center;">
           <div style="width:56px;height:56px;border-radius:12px;background-size:cover;background-position:center;flex-shrink:0;position:relative;background-image:url('${state.customStyle.img}')">
-            <div class="check" style="opacity:${state.selectedStyle==='custom'?'1':'0'}; transform:scale(${state.selectedStyle==='custom'?'1':'0.6'}); top:-6px; right:-6px;">${ICONS.check}</div>
+            <div class="check" style="opacity:${referenceSelected?'1':'0'}; transform:scale(${referenceSelected?'1':'0.6'}); top:-6px; right:-6px;">${ICONS.check}</div>
           </div>
           <div class="text-col" style="flex:1;">
-            <div class="upload-text">我的参考图</div>
-            <div class="upload-sub">已上传，将按这张图的风格生成</div>
+            <div class="upload-text">${escapeText(state.customStyle.name || '我的参考图')}</div>
+            <div class="upload-sub">已识别其中的家具、画作与整体配色</div>
           </div>
           <button class="swap-btn" data-action="upload-style-ref" onclick="event.stopPropagation()" style="margin-top:0;">${ICONS.refresh}更换</button>
         </div>
@@ -1574,16 +2002,22 @@ function renderStyle(){
           </div>
         </div>
       </div>`}
-    ${list.map(s => `
-      <div class="style-card ${state.selectedStyle===s.id?'selected':''} ${state._styleCat===s.name?'selected':''}" data-style="${s.id}">
-        <div class="img" style="background-image:url('${styleImage(s.id, 0)}')">
+    ${activeImages.map((image, index) => {
+      const selected = state.selectedStyle === activeStyle.id
+        && state.customStyle
+        && state.customStyle.sourceStyleId === activeStyle.id
+        && state.customStyle.img === image;
+      return `
+      <div class="style-card ${selected?'selected':''}" data-style-ref="${activeStyle.id}" data-style-index="${index}">
+        <div class="img" style="background-image:url('${image}')">
           <div class="check">${ICONS.check}</div>
         </div>
         <div class="body">
-          <div class="name">${s.name}</div>
-          <div class="desc">${s.desc}</div>
+          <div class="name">${activeStyle.name} ${String(index + 1).padStart(2, '0')}</div>
+          <div class="desc">参考图中的家具、画作与配色将优先参与生成</div>
         </div>
-      </div>`).join('')}
+      </div>`;
+    }).join('')}
   </div>`;
 }
 
@@ -1627,6 +2061,7 @@ function renderResult(){
   const before = state.photo || IMG('camera-room-9',800,1400);
   const after = plan.after;
   const isFav = state.favoriteResultStyles.has(plan.id);
+  const structureLocked = state.generationMeta && state.generationMeta.provider === 'fal_structure_fill';
   return `
   <div class="topbar">
     <button class="icon-btn" data-action="back">${ICONS.back}</button>
@@ -1640,10 +2075,18 @@ function renderResult(){
     <div class="compare-label after">改造后</div>
     <div class="compare-handle" id="compareHandle" style="left:50%"></div>
   </div>
-  <div class="result-note">✓ 原有家具已清除，硬装结构未改变</div>
+  <div class="result-note">${structureLocked ? '✓ 原空间结构已由遮罩锁定，仅生成家具与软装' : '✓ 已按原空间生成，请滑动对比结构与布局'}</div>
   <div class="result-meta">
     <div class="name">方案 · ${plan.name}</div>
     <div class="desc">${plan.desc}</div>
+  </div>
+  <div class="refine-panel">
+    <div class="refine-title">继续调整这套方案</div>
+    <div class="refine-sub">局部调整正在接入；现在可以先记录一个主要调整</div>
+    <div class="refine-compose">
+      <input class="refine-input" id="refineInput" value="${escapeText(state.refinementText)}" placeholder="例如：把地毯换成芥末黄色" maxlength="80" />
+      <button class="refine-send" data-action="submit-refinement" aria-label="应用调整">→</button>
+    </div>
   </div>
   <div class="result-actions">
     <button class="btn-secondary" data-action="regenerate">重新生成</button>
@@ -1652,8 +2095,8 @@ function renderResult(){
   <div class="shop-entry" data-action="goto-shopping-list" data-planid="${plan.id}">
     <div class="icon">${ICONS.bag}</div>
     <div class="txt">
-      <div class="t1">生成这套方案的家具购买清单</div>
-      <div class="t2">按图里的家具，列一份可以直接照着买的清单</div>
+      <div class="t1">查看本方案搭配</div>
+      <div class="t2">从最终成图中查看家具与软装</div>
     </div>
     <div class="chev">${ICONS.chevron}</div>
   </div>`;
@@ -1663,6 +2106,31 @@ function renderResult(){
 function shoppingUrl(name){
   return `https://s.taobao.com/search?q=${encodeURIComponent(name)}`;
 }
+function shoppingZoneForItem(item){
+  const zones = (state.generationMeta && state.generationMeta.layoutPlan && state.generationMeta.layoutPlan.zones)
+    || (state.layoutPlan && state.layoutPlan.zones)
+    || {};
+  const zoneKey = {
+    sofa:'sofa',
+    chair:'accentChair',
+    table:'rugTable',
+    rug:'rugTable',
+    cabinet:'mediaConsole',
+    art:'wallArt',
+    lamp:'decor'
+  }[item.icon];
+  return zoneKey ? zones[zoneKey] : null;
+}
+function generatedItemCropStyle(image, zone){
+  if(!image || !zone) return '';
+  const x = Number(zone.x), y = Number(zone.y), w = Number(zone.w), h = Number(zone.h);
+  if(![x,y,w,h].every(Number.isFinite) || w <= 0 || h <= 0) return '';
+  const sizeX = 100 / Math.min(1, w);
+  const sizeY = 100 / Math.min(1, h);
+  const positionX = w >= .999 ? 0 : (x / Math.max(.001, 1 - w)) * 100;
+  const positionY = h >= .999 ? 0 : (y / Math.max(.001, 1 - h)) * 100;
+  return `background-image:url('${image}');background-size:${sizeX.toFixed(1)}% ${sizeY.toFixed(1)}%;background-position:${positionX.toFixed(1)}% ${positionY.toFixed(1)}%;`;
+}
 function renderShoppingList(){
   const plan = planFor('A');
   const items = FURNITURE_LISTS[plan.id] || FURNITURE_LISTS.custom;
@@ -1670,69 +2138,103 @@ function renderShoppingList(){
   return `
   <div class="topbar">
     <button class="icon-btn" data-action="back">${ICONS.back}</button>
-    <div class="title">家具购买清单</div>
+    <div class="title">方案搭配清单</div>
     <div style="width:36px"></div>
   </div>
   <div class="section-pad" style="margin-bottom:14px;">
     <div style="font-size:13px; color:var(--ink-soft); line-height:1.6;">
-      根据「方案 · ${plan.name}」里出现的家具，AI 整理了一份可以直接照着买的清单（含参考款式和预估价格）。
+      根据「方案 · ${plan.name}」的最终成图，整理其中的家具与软装。图片取自当前方案，商品仅提供相似款参考。
     </div>
   </div>
   <div class="shop-summary">
     <div>
-      <div class="label">共 ${items.length} 件家具</div>
+      <div class="label">共 ${items.length} 件搭配</div>
       <div class="value">预估合计 ¥${total.toLocaleString()}</div>
     </div>
-    <button class="btn-secondary" data-action="share-list">分享清单</button>
+    <button class="btn-secondary" data-action="share-list">分享搭配</button>
   </div>
   <div class="shop-list">
-    ${items.map(it => `
+    ${items.map(it => {
+      const cropStyle = generatedItemCropStyle(plan.after, shoppingZoneForItem(it));
+      return `
       <div class="shop-item">
-        <div class="shop-thumb ${it.icon || 'sofa'}">${shopIcon(it.icon)}</div>
+        <div class="shop-thumb ${cropStyle ? 'has-image' : (it.icon || 'sofa')}" style="${cropStyle}">${cropStyle ? '' : shopIcon(it.icon)}</div>
         <div class="shop-info">
           <div class="name">${it.name}</div>
           <span class="tag">${it.tag}</span>
         </div>
         <div class="shop-side">
           <div class="shop-price">¥${it.price.toLocaleString()}</div>
-          <a class="buy-link" href="${shoppingUrl(it.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">购买</a>
+          <a class="buy-link" href="${shoppingUrl(it.name)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">查看相似款</a>
         </div>
-      </div>`).join('')}
+      </div>`;
+    }).join('')}
   </div>
-  <div class="shop-note">* 价格为 AI 预估的参考价，实际款式和价格以你在电商平台搜索到的商品为准，样式相近即可，不必强求一模一样。</div>
+  <div class="shop-note">* 当前图片来自生成方案，价格为 AI 预估参考价；真实商品匹配将在后续阶段接入。</div>
   <div class="shop-actions">
-    <button class="btn-secondary" data-action="save-list">保存清单</button>
-    <button class="btn-primary" data-action="copy-list">复制清单去购物</button>
+    <button class="btn-secondary" data-action="save-list">保存搭配</button>
+    <button class="btn-primary" data-action="copy-list">复制搭配清单</button>
   </div>`;
 }
 
 /* ============ INSPIRATION ============ */
 function renderInspiration(){
-  const cats = STYLES.map(s=>s.name);
-  const activeCat = state._inspCat || cats[0];
-  const list = INSPIRATION.filter(i=>i.tag===activeCat);
+  const grouped = STYLES.map(style => INSPIRATION.filter(item => item.tag === style.name));
+  const list = [];
+  const longestGroup = Math.max(...grouped.map(group => group.length));
+  for(let index = 0; index < longestGroup; index++){
+    grouped.forEach(group => {
+      if(group[index]) list.push(group[index]);
+    });
+  }
+  const heights = [224, 188, 252, 216, 198, 238, 184, 232, 208, 258, 194, 226];
   return `
-  <div class="topbar">
-    <div class="title">灵感</div>
-    <div style="width:36px"></div>
-  </div>
-  <div class="chip-row">
-    ${cats.map(c => `<button class="chip ${c===activeCat?'active':''}" data-inspcat="${c}">${c}</button>`).join('')}
-  </div>
-  <div class="waterfall">
-    ${list.map(i => {
-      const isFav = state.favoriteInsp.has(i.seed);
-      return `
-      <div class="wf-card" data-inspcard="${i.seed}">
-        <button class="wf-heart ${isFav?'active':''}" data-action="toggle-fav-insp" data-seed="${i.seed}" onclick="event.stopPropagation()">${isFav ? ICONS.heartFilled : ICONS.heart}</button>
-        <img src="${i.img || IMG(i.seed,500,i.h)}" style="height:${i.h}px" />
-        <div class="body">
-          <span class="tag">${i.tag}</span>
-          <div class="name">${i.name}</div>
-          <div class="desc">${i.desc}</div>
+  <div class="inspiration-page">
+    <header class="inspiration-head">
+      <div class="inspiration-brand">吾室</div>
+      <h1 class="inspiration-title">灵感</h1>
+      <p class="inspiration-sub">设计你自己理想中的家</p>
+    </header>
+    <div class="waterfall">
+      ${list.map((item, index) => `
+        <button class="wf-card" data-inspcard="${item.seed}" aria-label="查看${item.name}" style="--insp-height:${heights[index % heights.length]}px">
+          <img src="${item.img || IMG(item.seed,500,item.h)}" alt="${item.name}" loading="lazy" />
+        </button>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderInspirationDetail(){
+  const item = state.selectedInspiration || INSPIRATION[0];
+  const image = item.img || IMG(item.seed, 800, item.h);
+  const isFavorite = state.favoriteInsp.has(item.seed);
+  return `
+  <div class="inspiration-detail">
+    <div class="inspiration-detail-top">
+      <button class="icon-btn" data-action="back-inspiration" aria-label="返回灵感页">${ICONS.back}</button>
+      <div class="inspiration-detail-kicker">吾室 · 灵感</div>
+      <button class="icon-btn fav-toggle ${isFavorite?'active':''}" data-action="toggle-fav-insp" data-seed="${item.seed}" aria-label="${isFavorite?'取消收藏':'收藏'}">
+        ${isFavorite ? ICONS.heartFilled : ICONS.heart}
+      </button>
+    </div>
+    <button class="inspiration-detail-media" data-action="open-inspiration-zoom" aria-label="放大查看${item.name}">
+      <img src="${image}" alt="${item.name}" />
+    </button>
+    <div class="inspiration-detail-copy">
+      <h1 class="inspiration-detail-title">${item.name}</h1>
+      <p class="inspiration-detail-desc">${item.desc}</p>
+    </div>
+    <div class="inspiration-detail-action">
+      <button class="btn-primary" data-action="inspiration-generate">AI 生成</button>
+    </div>
+    ${state.inspirationZoomOpen ? `
+      <div class="inspiration-zoom" aria-label="灵感图片放大预览">
+        <button class="icon-btn inspiration-zoom-close" data-action="close-inspiration-zoom" aria-label="关闭放大预览"></button>
+        <div class="inspiration-zoom-stage" id="inspirationZoomStage">
+          <img id="inspirationZoomImage" src="${image}" alt="${item.name}" />
         </div>
-      </div>`;
-    }).join('')}
+        <div class="inspiration-zoom-hint">双击或双指缩放</div>
+      </div>` : ''}
   </div>`;
 }
 
@@ -1804,8 +2306,8 @@ function attachHandlers(){
     document.querySelectorAll('[data-cat]').forEach(el=>{
       el.addEventListener('click', ()=>{
         state._styleCat = el.getAttribute('data-cat');
-        const style = STYLES.find(s=>s.name===state._styleCat);
-        if(style) state.selectedStyle = style.id;
+        state.selectedStyle = null;
+        if(state.customStyle && state.customStyle.sourceStyleId) state.customStyle = null;
         render();
       });
     });
@@ -1817,23 +2319,76 @@ function attachHandlers(){
         render();
       });
     });
+    document.querySelectorAll('[data-style-ref]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const styleId = el.getAttribute('data-style-ref');
+        const index = Number(el.getAttribute('data-style-index')) || 0;
+        const style = STYLES.find(item=>item.id===styleId);
+        const image = styleImage(styleId, index);
+        if(!style || !image) return;
+        state.selectedStyle = styleId;
+        state._styleCat = style.name;
+        state.customStyle = {
+          img:image,
+          sourceStyleId:styleId,
+          name:`${style.name} ${String(index + 1).padStart(2, '0')}`,
+          sceneSpec:null
+        };
+        render();
+      });
+    });
   }
   if(state.page === 'inspiration'){
-    document.querySelectorAll('[data-inspcat]').forEach(el=>{
-      el.addEventListener('click', ()=>{ state._inspCat = el.getAttribute('data-inspcat'); render(); });
-    });
     document.querySelectorAll('[data-inspcard]').forEach(el=>{
       el.addEventListener('click', ()=>{
         const seed = el.getAttribute('data-inspcard');
         const item = INSPIRATION.find(x=>x.seed===seed);
         if(!item) return;
-        state.customStyle = { img: item.img || IMG(item.seed, 500, item.h) };
-        state.selectedStyle = 'custom';
-        state.preserveReferenceForNextRoomUpload = true;
-        showToast(`已将「${item.name}」设为参考风格`);
-        nav('camera');
+        state.selectedInspiration = item;
+        state.inspirationZoomOpen = false;
+        state.inspirationZoomScale = 1;
+        nav('inspirationDetail');
       });
     });
+  }
+  if(state.page === 'inspirationDetail' && state.inspirationZoomOpen){
+    const stage = document.getElementById('inspirationZoomStage');
+    const image = document.getElementById('inspirationZoomImage');
+    if(stage && image){
+      let pinchStartDistance = 0;
+      let pinchStartScale = state.inspirationZoomScale || 1;
+      const clampScale = value => Math.min(4, Math.max(1, value));
+      const applyScale = (value, animate=true) => {
+        state.inspirationZoomScale = clampScale(value);
+        image.style.transition = animate ? 'transform .2s ease' : 'none';
+        image.style.transform = `scale(${state.inspirationZoomScale})`;
+        stage.style.cursor = state.inspirationZoomScale > 1 ? 'zoom-out' : 'zoom-in';
+      };
+      applyScale(state.inspirationZoomScale);
+      stage.addEventListener('dblclick', ()=> applyScale(state.inspirationZoomScale > 1 ? 1 : 2.5));
+      stage.addEventListener('wheel', event=>{
+        event.preventDefault();
+        applyScale(state.inspirationZoomScale + (event.deltaY < 0 ? .25 : -.25), false);
+      }, {passive:false});
+      stage.addEventListener('touchstart', event=>{
+        if(event.touches.length !== 2) return;
+        pinchStartDistance = Math.hypot(
+          event.touches[0].clientX - event.touches[1].clientX,
+          event.touches[0].clientY - event.touches[1].clientY
+        );
+        pinchStartScale = state.inspirationZoomScale;
+      }, {passive:true});
+      stage.addEventListener('touchmove', event=>{
+        if(event.touches.length !== 2 || !pinchStartDistance) return;
+        event.preventDefault();
+        const distance = Math.hypot(
+          event.touches[0].clientX - event.touches[1].clientX,
+          event.touches[0].clientY - event.touches[1].clientY
+        );
+        applyScale(pinchStartScale * distance / pinchStartDistance, false);
+      }, {passive:false});
+      stage.addEventListener('touchend', ()=>{ pinchStartDistance = 0; }, {passive:true});
+    }
   }
   if(state.page === 'history'){
     document.querySelectorAll('[data-histitem]').forEach(el=>{
@@ -1849,6 +2404,15 @@ function attachHandlers(){
     document.querySelectorAll('[data-tab]').forEach(el=>{
       el.addEventListener('click', ()=>{ state.resultTab = el.getAttribute('data-tab'); render(); });
     });
+    const refineInput = document.getElementById('refineInput');
+    if(refineInput){
+      refineInput.addEventListener('input', ()=>{ state.refinementText = refineInput.value; });
+      refineInput.addEventListener('keydown', event=>{
+        if(event.key !== 'Enter' || event.isComposing) return;
+        event.preventDefault();
+        document.querySelector('[data-action="submit-refinement"]')?.click();
+      });
+    }
     setupCompareSlider();
   }
   if(state.page === 'generating'){
@@ -1861,6 +2425,39 @@ function handleAction(action, el){
     case 'back':
       goBack();
       break;
+    case 'back-inspiration':
+      state.inspirationZoomOpen = false;
+      state.inspirationZoomScale = 1;
+      nav('inspiration', {push:false});
+      break;
+    case 'open-inspiration-zoom':
+      state.inspirationZoomOpen = true;
+      state.inspirationZoomScale = 1;
+      render();
+      document.getElementById('screen').scrollTop = 0;
+      break;
+    case 'close-inspiration-zoom':
+      state.inspirationZoomOpen = false;
+      state.inspirationZoomScale = 1;
+      render();
+      break;
+    case 'inspiration-generate': {
+      const item = state.selectedInspiration;
+      if(!item){ showToast('请先选择一张灵感图片'); return; }
+      state.customStyle = {
+        img: item.img || IMG(item.seed, 800, item.h),
+        sourceStyleId: item.styleId || null,
+        name: item.name,
+        sceneSpec: null
+      };
+      state.selectedStyle = item.styleId || 'custom';
+      state.preserveReferenceForNextRoomUpload = true;
+      state.inspirationZoomOpen = false;
+      if(!item.styleId) prepareInspirationReference(item);
+      showToast(`已选择「${item.name}」的风格方向`, 2000);
+      nav('camera');
+      break;
+    }
     case 'search':
       showToast('搜索功能即将上线');
       break;
@@ -1881,6 +2478,22 @@ function handleAction(action, el){
     case 'album':
       document.getElementById('fileInput').click();
       break;
+    case 'photo-check-continue':
+      if(state.photoQuality && state.photoQuality.status === 'fail') return;
+      nav('style', {push:false});
+      break;
+    case 'photo-check-retake':
+      state.preserveReferenceForNextRoomUpload = Boolean(state.customStyle && state.selectedStyle === 'custom');
+      state.photo = null;
+      state.roomMask = null;
+      state.roomZoneMasks = null;
+      state.roomMaskMeta = null;
+      state.layoutPlan = null;
+      state.roomAnalysis = null;
+      state.roomAnalysisPromise = null;
+      state.photoQuality = null;
+      nav('camera', {push:false});
+      break;
     case 'upload-style-ref':
       document.getElementById('styleFileInput').click();
       break;
@@ -1894,6 +2507,16 @@ function handleAction(action, el){
     case 'regenerate':
       nav('style');
       break;
+    case 'submit-refinement': {
+      const instruction = String(state.refinementText || '').trim();
+      if(!instruction){
+        showToast('请描述想调整的家具、颜色或材质');
+        return;
+      }
+      state.pendingRefinement = instruction;
+      showToast('已记录调整要求，局部生成模型确认后即可执行', 2600);
+      break;
+    }
     case 'save-result': {
       const plan = planFor(state.resultTab);
       state.historyItems.unshift({
@@ -1908,20 +2531,20 @@ function handleAction(action, el){
       nav('shoppingList');
       break;
     case 'share-list':
-      showToast('清单分享功能开发中');
+      showToast('搭配分享功能开发中');
       break;
     case 'save-list':
-      showToast('已保存清单到历史');
+      showToast('已保存这套搭配');
       break;
     case 'copy-list': {
       const plan = planFor('A');
       const items = FURNITURE_LISTS[plan.id] || FURNITURE_LISTS.custom;
       const text = items.map(it=>`${it.name}（${it.tag}）约 ¥${it.price}`).join('\n');
       if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(text).then(()=> showToast('清单已复制，去电商平台搜索购买吧'))
-          .catch(()=> showToast('清单已生成，可截图保存'));
+        navigator.clipboard.writeText(text).then(()=> showToast('搭配清单已复制'))
+          .catch(()=> showToast('搭配清单已生成，可截图保存'));
       } else {
-        showToast('清单已生成，可截图保存');
+        showToast('搭配清单已生成，可截图保存');
       }
       break;
     }
@@ -1995,7 +2618,7 @@ document.getElementById('styleFileInput').addEventListener('change', function(e)
   const reader = new FileReader();
   reader.onload = async function(ev){
     const image = await resizeImageDataUrl(ev.target.result, 1200, 0.86);
-    state.customStyle = { img: image };
+    state.customStyle = { img: image, sourceStyleId:null, name:'我的参考图', sceneSpec:null };
     state.selectedStyle = 'custom';
     render();
     showToast('已上传参考图，将按此风格生成');
@@ -2023,6 +2646,8 @@ function runGeneratingSequence(){
       provider: data.provider || 'unknown',
       model: data.model || '',
       layoutPlan: data.layoutPlan || null,
+      referenceScene: data.referenceScene || null,
+      structureProtected: Boolean(data.structureProtected),
       quality: data.quality || null,
       prompt: data.plans && data.plans[0] ? data.plans[0].prompt : ''
     };
