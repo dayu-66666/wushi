@@ -827,6 +827,34 @@ async function assessGeneratedRoom(originalImage, generatedImage, input) {
   };
 }
 
+async function assessLocalRefinement(baseImage, editedImage, instruction) {
+  const prompt = [
+    "You are inspecting a local edit of a furnished living-room photograph.",
+    "Despite the attached labels, IMAGE 1 is the furnished result BEFORE the edit and IMAGE 2 is the same scene AFTER the edit.",
+    `The user requested exactly this change (it may be written in Chinese): ${instruction}.`,
+    "Judge conservatively and return only valid JSON with this schema:",
+    '{"targetChanged":true,"targetMatchesRequest":true,"unrelatedFurnitureChanged":["..."],"structureChanged":["..."],"issues":["..."]}',
+    "targetChanged: whether the requested object or attribute visibly changed between IMAGE 1 and IMAGE 2.",
+    "targetMatchesRequest: whether the change fulfills the request, including the requested object, color, material or style.",
+    "unrelatedFurnitureChanged: list every furniture or decor item other than the requested target that moved, disappeared, appeared or changed appearance. Natural shadow or reflection updates around the edited object do not count.",
+    "structureChanged: list any change to walls, floor, ceiling, doors, windows, balcony, openings, crop, perspective, camera angle or lighting direction.",
+    "issues: any other visible quality problem introduced by the edit."
+  ].join(" ");
+  const result = await queryOpenRouterVisionPair(baseImage, editedImage, prompt);
+  const raw = parseJsonOutput(result.raw);
+  const toList = value => Array.isArray(value) ? value.slice(0, 8).map(String) : [];
+  return {
+    targetChanged: raw?.targetChanged === true,
+    targetMatchesRequest: raw?.targetMatchesRequest === true,
+    unrelatedFurnitureChanged: toList(raw?.unrelatedFurnitureChanged),
+    structureChanged: toList(raw?.structureChanged),
+    issues: toList(raw?.issues),
+    provider: "openrouter_vision",
+    model: result.model,
+    usage: result.usage
+  };
+}
+
 async function analyzeRoomWithFalVision(roomImage) {
   const key = imageCacheKey(roomImage);
   if (ROOM_ANALYSIS_CACHE.has(key)) return ROOM_ANALYSIS_CACHE.get(key);
@@ -1209,6 +1237,51 @@ function makeKontextRepairPrompt(input, report, regenerateFromOriginal) {
     livingRoomRecipePrompt(input.styleId || "cream", input.styleSpec),
     "Exactly one accent chair must face the sofa and coffee table without blocking the main path. Keep the result photorealistic, restrained and coherent."
   ].filter(Boolean).join(" ");
+}
+
+function makeKontextLocalEditPrompt(instruction) {
+  return [
+    `${instruction}.`,
+    "This requested change is mandatory and must be clearly visible in the result; do not return the photograph unchanged.",
+    "Apply it as a local edit of this furnished living-room photograph, not a redesign.",
+    "Change nothing else: every other furniture piece, cushion, artwork, lamp and decor keeps its exact position, silhouette, color and material.",
+    "The architecture is immutable: walls, floor, ceiling, doors, windows, balcony, openings, vents, switches, outlets, skirting boards, crop, perspective, camera angle and lighting direction must not change.",
+    "Match the existing light, reflections and contact shadows so the edited object blends naturally.",
+    "Photorealistic high-end interior magazine finish. No text, labels, logos or watermark."
+  ].join(" ");
+}
+
+async function translateRefinementInstruction(instruction) {
+  if (!/[㐀-鿿]/.test(instruction)) return instruction;
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) return instruction;
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${key}`,
+        "HTTP-Referer": process.env.OPENROUTER_SITE_URL || `http://127.0.0.1:${PORT}`,
+        "X-Title": "Wushi Refinement Translator"
+      },
+      body: JSON.stringify({
+        model: process.env.OPENROUTER_VISION_MODEL || "qwen/qwen3-vl-32b-instruct",
+        messages: [{
+          role: "user",
+          content: `Translate this interior-design editing request into one short imperative English sentence for an image editing model, keeping the target object, color and material exact. Return only the sentence. Request: ${instruction}`
+        }],
+        temperature: 0,
+        max_tokens: 80
+      }),
+      signal: AbortSignal.timeout(Number(process.env.OPENROUTER_REQUEST_TIMEOUT_MS || 60000))
+    });
+    const body = await response.json().catch(() => ({}));
+    const text = body?.choices?.[0]?.message?.content?.trim();
+    return text ? text.replace(/^["']|["'.]$/g, "") : instruction;
+  } catch (error) {
+    console.error("[gateway] refinement translation failed, using raw instruction:", error.message);
+    return instruction;
+  }
 }
 
 async function makeDeepSeekPrompt(input, styleId, variantIndex) {
@@ -1731,6 +1804,63 @@ async function generateWithFalKontext(input) {
   return result;
 }
 
+async function refineWithFalKontext(input) {
+  const key = process.env.FAL_KEY;
+  if (!key) throw new Error("FAL_KEY missing");
+  if (!input.baseResultImage) throw new Error("baseResultImage missing for local refinement");
+  const instruction = String(input.refinementInstruction || "").trim().slice(0, 240);
+  if (!instruction) throw new Error("refinementInstruction missing for local refinement");
+
+  const model = process.env.FAL_EDIT_MODEL || "fal-ai/flux-pro/kontext";
+  const englishInstruction = await translateRefinementInstruction(instruction);
+  const prompt = makeKontextLocalEditPrompt(englishInstruction);
+  const aspectRatio = nearestKontextAspectRatio(input.roomMaskMeta);
+  const edited = await callFalKontext({ key, model, imageUrl: input.baseResultImage, prompt, aspectRatio });
+
+  const refinementReport = await assessLocalRefinement(input.baseResultImage, edited.imageUrl, instruction);
+  const structureReport = input.roomImage
+    ? await assessGeneratedRoom(input.roomImage, edited.imageUrl, input)
+    : null;
+  console.log(`[gateway] local refinement inspected: edited=${edited.imageUrl} report=${JSON.stringify(refinementReport)} structureScore=${structureReport ? structureReport.structureScore : "skipped"}`);
+
+  if (refinementReport.structureChanged.length > 0
+    || (structureReport && (structureReport.structureScore < 95 || structureReport.structureChanges.length > 0))) {
+    throw new Error("局部调整改变了原空间结构，已拦截，请重试");
+  }
+  if (!refinementReport.targetChanged || !refinementReport.targetMatchesRequest) {
+    throw new Error("模型没有完成你要求的局部调整，请换一种描述再试");
+  }
+  if (refinementReport.unrelatedFurnitureChanged.length > 0) {
+    throw new Error(`局部调整意外改动了其他物件：${refinementReport.unrelatedFurnitureChanged.slice(0, 3).join("、")}，已拦截，请重试`);
+  }
+  if (structureReport) {
+    const blockingFurniture = new Set(["sofa", "accent_chair", "rug", "coffee_table"]);
+    const missingBlockingFurniture = structureReport.missingRequired.filter(id => blockingFurniture.has(id));
+    if (missingBlockingFurniture.length > 0) {
+      const labels = missingBlockingFurniture.map(id => LIVING_ROOM_RECIPE.find(item => item.id === id)?.label || id);
+      throw new Error(`局部调整后缺少客厅核心家具：${labels.join("、")}`);
+    }
+  }
+
+  const result = mockPlans(input);
+  result.provider = "fal_kontext_local_edit";
+  result.model = model;
+  result.seed = edited.body.seed || null;
+  result.timings = edited.body.timings || null;
+  result.layoutPlan = input.layoutPlan || null;
+  result.quality = {
+    mode: "local_refinement",
+    refinement: refinementReport,
+    structure: structureReport
+  };
+  result.plans = result.plans.map(plan => ({
+    ...plan,
+    after: edited.imageUrl,
+    prompt: edited.prompt
+  }));
+  return result;
+}
+
 async function handleGenerate(req, res) {
   const received = await readBody(req);
   const styleId = received.styleId || "cream";
@@ -1782,6 +1912,9 @@ async function handleGenerate(req, res) {
 
   if (provider === "fal_kontext") {
     try {
+      if (input.generationMode === "local_refinement" && input.baseResultImage) {
+        return json(res, 200, await refineWithFalKontext(input));
+      }
       return json(res, 200, await generateWithFalKontext({ ...input, skipRepair: true }));
     } catch (err) {
       console.error("[gateway] fal Kontext failed:", err.message);

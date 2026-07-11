@@ -1460,6 +1460,7 @@ const state = {
   photoQuality: null,
   refinementText: '',
   pendingRefinement: '',
+  refinementBaseImage: null, // approved result image that a local refinement edits in place
   compStatus: 'good',    // camera composition status
   selectedStyle: null,
   customStyle: null,   // { img: dataURL } uploaded reference image for style-select page
@@ -1747,6 +1748,13 @@ async function prepareInspirationReference(item){
   return promise;
 }
 
+// Instructions that ask for a whole new scheme regenerate the full set from the
+// original photo; anything else edits the current approved result in place.
+const GLOBAL_REFINEMENT_PATTERN = /整套|全套|整体|全部|换一版|再来一版|换个方案|换一套|重新设计|重新布局|重来|换.{0,2}风格/;
+function isGlobalRefinement(text){
+  return !text || GLOBAL_REFINEMENT_PATTERN.test(text);
+}
+
 async function requestModelGeneration(){
   if(state.inspirationAnalysisPromise){
     await state.inspirationAnalysisPromise.catch(()=> null);
@@ -1756,12 +1764,14 @@ async function requestModelGeneration(){
   if(roomAnalysis && roomAnalysis.photoQuality && roomAnalysis.photoQuality.status === 'fail'){
     throw new Error('这张照片无法识别完整空间，请重新拍摄或上传');
   }
-  // Preset/reference-gallery images use the fixed backend Style Spec for now.
-  // Only a user-uploaded custom reference enters the visual-reference pipeline.
-  const referenceMatchesSelection = state.customStyle
-    && !state.customStyle.sourceStyleId
-    && state.selectedStyle === 'custom';
+  // A reference image enters the visual pipeline whenever it matches the current
+  // selection: the user-uploaded custom image, or a gallery image of the selected style.
+  const referenceMatchesSelection = Boolean(state.customStyle && (
+    (!state.customStyle.sourceStyleId && state.selectedStyle === 'custom')
+    || (state.customStyle.sourceStyleId && state.customStyle.sourceStyleId === state.selectedStyle)
+  ));
   const styleRef = referenceMatchesSelection ? state.customStyle.img : null;
+  const localRefinement = Boolean(state.pendingRefinement && state.refinementBaseImage);
   const payload = {
     roomImage: state.photo || IMG('camera-room-9',800,1400),
     roomMask: state.roomMask,
@@ -1777,7 +1787,8 @@ async function requestModelGeneration(){
     outputs: 1,
     preserveStructure: true,
     refinementInstruction: state.pendingRefinement || null,
-    generationMode: 'layout_guided_edit'
+    baseResultImage: localRefinement ? state.refinementBaseImage : null,
+    generationMode: localRefinement ? 'local_refinement' : 'layout_guided_edit'
   };
   try{
     const res = await fetch(MODEL_API_URL, {
@@ -2089,7 +2100,7 @@ function renderResult(){
   <div class="result-note">✓ 已按原空间生成，请滑动对比家具布置效果。</div>
   <div class="refine-panel">
     <div class="refine-title">继续调整这套方案</div>
-    <div class="refine-sub">描述一个主要调整；留空则重新生成整套方案</div>
+    <div class="refine-sub">描述局部调整（如“把地毯换成芥末黄色”）只会修改对应物件；输入“整套换一版”或留空则重新生成整套方案</div>
     <div class="refine-compose">
       <input class="refine-input" id="refineInput" value="${escapeText(state.refinementText)}" placeholder="例如：把地毯换成芥末黄色" maxlength="80" />
     </div>
@@ -2393,6 +2404,7 @@ function attachHandlers(){
           name:`${style.name} ${String(index + 1).padStart(2, '0')}`,
           sceneSpec:null
         };
+        prepareInspirationReference({ img: image, styleId });
         render();
       });
     });
@@ -2456,6 +2468,7 @@ function attachHandlers(){
         if(!item) return;
         state.selectedStyle = item && item.style ? item.style : 'cream';
         state.resultTab = 'A';
+        state.generationMeta = null; // restored history items cannot be locally refined
         const style = STYLES.find(entry => entry.id === state.selectedStyle);
         state.generatedPlans = { A: {
           id:state.selectedStyle,
@@ -2532,7 +2545,7 @@ function handleAction(action, el){
       state.selectedStyle = item.styleId || 'custom';
       state.preserveReferenceForNextRoomUpload = true;
       state.inspirationZoomOpen = false;
-      if(!item.styleId) prepareInspirationReference(item);
+      prepareInspirationReference(item);
       showToast(`已选择「${item.name}」的风格方向`, 2000);
       nav('camera');
       break;
@@ -2578,18 +2591,29 @@ function handleAction(action, el){
       break;
     case 'generate':
       if(!state.selectedStyle){ showToast('请先选择一个家具风格'); return; }
+      state.pendingRefinement = '';
+      state.refinementText = '';
+      state.refinementBaseImage = null;
       state.generatedPlans = null;
       state.generationMeta = null;
       state.generationRunId++;
       nav('generating');
       break;
-    case 'regenerate':
+    case 'regenerate': {
       state.pendingRefinement = String(state.refinementText || '').trim();
+      state.refinementBaseImage = null;
+      if(state.pendingRefinement && !isGlobalRefinement(state.pendingRefinement)){
+        // Local edits only apply to a result generated in this session from the
+        // current photo; anything else falls back to a full regeneration.
+        const currentPlan = state.photo && state.generationMeta && state.generatedPlans ? planFor(state.resultTab) : null;
+        if(currentPlan && currentPlan.after) state.refinementBaseImage = currentPlan.after;
+      }
       state.generatedPlans = null;
       state.generationMeta = null;
       state.generationRunId++;
       nav('generating');
       break;
+    }
     case 'save-result': {
       const plan = planFor(state.resultTab);
       if(!state.historyItems.some(item => item.img === plan.after)){
@@ -2723,6 +2747,9 @@ function runGeneratingSequence(){
       quality: data.quality || null,
       prompt: data.plans && data.plans[0] ? data.plans[0].prompt : ''
     };
+    state.pendingRefinement = '';
+    state.refinementText = '';
+    state.refinementBaseImage = null;
   }).catch((err)=>{
     generationError = err;
   });
