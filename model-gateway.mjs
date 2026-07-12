@@ -720,7 +720,9 @@ async function queryOpenRouterVision(imageUrl, prompt) {
 async function queryOpenRouterVisionPair(originalImage, generatedImage, prompt, referenceImage=null) {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error("OPENROUTER_API_KEY missing");
-  const model = process.env.OPENROUTER_VISION_MODEL || "qwen/qwen3-vl-32b-instruct";
+  // QC compares images pass/fail — a fast small model verified equivalent here.
+  // Room/style analysis stays on the stronger OPENROUTER_VISION_MODEL.
+  const model = process.env.OPENROUTER_QC_MODEL || process.env.OPENROUTER_VISION_MODEL || "qwen/qwen3-vl-32b-instruct";
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
