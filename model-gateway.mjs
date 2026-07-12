@@ -1300,6 +1300,32 @@ function makeKontextLocalEditPrompt(instruction) {
   ].join(" ");
 }
 
+function makeKontextRefLocalEditPrompt(instruction) {
+  return [
+    "IMAGE 1 is an approved furnished living-room photograph. IMAGE 2 is a reference photo of a single item.",
+    `${instruction}.`,
+    "This requested change is mandatory and must be clearly visible in the result; do not return IMAGE 1 unchanged.",
+    "Recreate the reference item's color, material, pattern and shape faithfully, rescaled to fit IMAGE 1's room naturally.",
+    "Never copy IMAGE 2's background, room, lighting or composition — only the item itself.",
+    "Change nothing else in IMAGE 1: every other furniture piece, cushion, artwork, lamp and decor keeps its exact position, silhouette, color and material.",
+    "The architecture is immutable: walls, floor, ceiling, doors, windows, balcony, openings, vents, switches, outlets, skirting boards, crop, perspective, camera angle and lighting direction must not change.",
+    "Match the existing light, reflections and contact shadows so the edited object blends naturally.",
+    "Photorealistic high-end interior magazine finish. No text, labels, logos or watermark."
+  ].join(" ");
+}
+
+async function identifyReferenceItem(referenceImage) {
+  const prompt = [
+    "Identify the single main furniture or decor item shown in this photo.",
+    "Reply with only a short English noun phrase describing it precisely (item type, color, material, pattern),",
+    "for example: 'mustard yellow wool area rug'. No JSON, no extra words."
+  ].join(" ");
+  const result = await queryOpenRouterVision(referenceImage, prompt);
+  const item = String(result.raw || "").trim().split("\n")[0].replace(/^["'`]+|["'`.]+$/g, "").slice(0, 90);
+  if (!item) throw new Error("reference item identification returned empty");
+  return item;
+}
+
 async function translateRefinementInstruction(instruction) {
   if (!/[㐀-鿿]/.test(instruction)) return instruction;
   const key = process.env.OPENROUTER_API_KEY;
@@ -1892,16 +1918,45 @@ async function refineWithFalKontext(input) {
   const key = process.env.FAL_KEY;
   if (!key) throw new Error("FAL_KEY missing");
   if (!input.baseResultImage) throw new Error("baseResultImage missing for local refinement");
+  const referenceImage = input.refinementReferenceImage || null;
   const instruction = String(input.refinementInstruction || "").trim().slice(0, 240);
-  if (!instruction) throw new Error("refinementInstruction missing for local refinement");
+  if (!instruction && !referenceImage) throw new Error("refinement instruction or reference image required");
 
-  const model = process.env.FAL_EDIT_MODEL || "fal-ai/flux-pro/kontext";
-  const englishInstruction = await translateRefinementInstruction(instruction);
-  const prompt = makeKontextLocalEditPrompt(englishInstruction);
+  // With an item reference the edit runs on a multi-image model that can see it;
+  // text-only edits stay on the proven Kontext single-image path.
+  const model = referenceImage
+    ? (process.env.FAL_IMAGE_EDIT_MODEL || "openai/gpt-image-2/edit")
+    : (process.env.FAL_EDIT_MODEL || "fal-ai/flux-pro/kontext");
+  let englishInstruction;
+  let referenceItem = null;
+  if (referenceImage) {
+    referenceItem = await identifyReferenceItem(referenceImage).catch(error => {
+      console.error("[gateway] reference item identification failed:", error.message);
+      return "the item shown in IMAGE 2";
+    });
+    englishInstruction = instruction
+      ? `${await translateRefinementInstruction(instruction)} — the replacement must closely match the ${referenceItem} shown in IMAGE 2`
+      : `Replace the room's corresponding item with the ${referenceItem} shown in IMAGE 2`;
+  } else {
+    englishInstruction = await translateRefinementInstruction(instruction);
+  }
+  const prompt = referenceImage
+    ? makeKontextRefLocalEditPrompt(englishInstruction)
+    : makeKontextLocalEditPrompt(englishInstruction);
   const aspectRatio = nearestKontextAspectRatio(input.roomMaskMeta);
-  const edited = await callFalKontext({ key, model, imageUrl: input.baseResultImage, prompt, aspectRatio });
+  const edited = await callFalKontext({
+    key,
+    model,
+    imageUrls: referenceImage ? [input.baseResultImage, referenceImage] : [input.baseResultImage],
+    prompt,
+    aspectRatio
+  });
 
-  const refinementReport = await assessLocalRefinement(input.baseResultImage, edited.imageUrl, instruction);
+  const refinementReport = await assessLocalRefinement(
+    input.baseResultImage,
+    edited.imageUrl,
+    instruction || `把对应物件换成参考图里的：${referenceItem}`
+  );
   const structureReport = input.roomImage
     ? await assessGeneratedRoom(input.roomImage, edited.imageUrl, input)
     : null;
@@ -1927,13 +1982,14 @@ async function refineWithFalKontext(input) {
   }
 
   const result = mockPlans(input);
-  result.provider = "fal_kontext_local_edit";
+  result.provider = referenceImage ? "fal_image_edit_local_ref" : "fal_kontext_local_edit";
   result.model = model;
   result.seed = edited.body.seed || null;
   result.timings = edited.body.timings || null;
   result.layoutPlan = input.layoutPlan || null;
   result.quality = {
     mode: "local_refinement",
+    referenceItem,
     refinement: refinementReport,
     structure: structureReport
   };

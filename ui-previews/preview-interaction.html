@@ -902,6 +902,58 @@
     font:13px var(--font-sans);
   }
   .refine-input::placeholder{color:#716B64;}
+  .refine-add{
+    flex-shrink:0;width:34px;height:34px;border-radius:50%;
+    border:1.5px dashed #4A453E;background:transparent;color:var(--ink-soft);
+    font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  }
+  .refine-chip{
+    flex-shrink:0;position:relative;width:34px;height:34px;border-radius:9px;
+    background-size:cover;background-position:center;border:1px solid var(--gold);
+  }
+  .refine-chip-x{
+    position:absolute;top:-7px;right:-7px;width:16px;height:16px;border-radius:50%;
+    background:#2A2723;color:var(--ink-soft);border:1px solid #45403A;font-size:10px;
+    line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;
+  }
+  .sheet-mask{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:60;}
+  .upload-sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:61;margin:0 auto;max-width:460px;
+    background:#141311;border-radius:24px 24px 0 0;padding:10px 16px 26px;
+    border:1px solid #2A2723;border-bottom:0;
+  }
+  .upload-sheet .sheet-handle{width:38px;height:4px;border-radius:2px;background:#3A362F;margin:2px auto 12px;}
+  .upload-sheet .sheet-title{font-size:16px;font-weight:700;text-align:center;margin-bottom:12px;color:var(--ink);}
+  .sheet-opt{
+    width:100%;display:flex;align-items:center;gap:12px;text-align:left;
+    background:#1B1916;border:1px solid #2A2723;border-radius:14px;
+    padding:12px 14px;color:var(--ink);font:600 14.5px var(--font-sans);cursor:pointer;
+  }
+  .sheet-opt+.sheet-opt{margin-top:9px;}
+  .sheet-opt .opt-ic{flex-shrink:0;width:38px;height:38px;border-radius:11px;background:#0E0D0B;border:1px solid #2A2723;display:flex;align-items:center;justify-content:center;}
+  .sheet-opt .opt-ic svg{width:19px;height:19px;stroke:var(--gold);fill:none;stroke-width:1.6;}
+  .sheet-opt .opt-sub{display:block;font-size:11.5px;font-weight:400;color:var(--ink-soft);margin-top:1px;}
+  .sheet-divider{display:flex;align-items:center;gap:10px;color:var(--ink-soft);font-size:11.5px;margin:14px 0 10px;}
+  .sheet-divider::before,.sheet-divider::after{content:"";flex:1;height:1px;background:#2A2723;}
+  .sheet-samples{display:flex;gap:10px;}
+  .sheet-sample{
+    position:relative;flex:1;height:110px;border-radius:13px;overflow:hidden;
+    border:1px solid #2A2723;background-size:cover;background-position:center;cursor:pointer;padding:0;
+  }
+  .sheet-sample .s-lab{
+    position:absolute;left:0;right:0;bottom:0;padding:18px 9px 7px;text-align:left;
+    font:600 11.5px var(--font-sans);color:#fff;
+    background:linear-gradient(transparent,rgba(0,0,0,.85));
+  }
+  .sheet-sample .s-badge{
+    position:absolute;top:7px;right:7px;background:rgba(0,0,0,.5);
+    border:1px solid rgba(201,169,106,.55);color:var(--gold);
+    font:700 10px var(--font-sans);padding:2px 7px;border-radius:999px;
+  }
+  .sheet-cancel{
+    width:100%;margin-top:12px;height:44px;border-radius:999px;background:transparent;
+    border:1px solid #3A362F;color:var(--ink-soft);font:600 14px var(--font-sans);cursor:pointer;
+  }
   .result-actions{display:flex; gap:12px; padding:14px 18px 6px;}
   .result-actions .btn-primary, .result-actions .btn-secondary{flex:1;}
   .shop-entry{
@@ -1268,6 +1320,7 @@
     <input type="file" id="fileInput" accept="image/*" style="display:none" />
     <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" />
     <input type="file" id="styleFileInput" accept="image/*" style="display:none" />
+    <input type="file" id="refineRefInput" accept="image/*" style="display:none" />
   </div>
 </div>
 
@@ -1295,6 +1348,10 @@ const STYLE_IMAGES = Object.fromEntries(
   ])
 );
 const HOME_IMAGES = ['01', '05', '07'].map(id => ASSET(`assets/images/home/${id}.jpg`));
+const SAMPLE_ROOMS = [
+  { img: ASSET('assets/images/samples/01.jpg'), name: '现代精装 · 深色地砖' },
+  { img: ASSET('assets/images/samples/02.jpg'), name: '精装交付 · 大理石墙' }
+];
 const styleImage = (id, index=0) => (STYLE_IMAGES[id] && STYLE_IMAGES[id][index % STYLE_IMAGES[id].length]) || IMG(`ai-home-${id}-${index}`, 500, 400);
 
 const STYLES = [
@@ -1465,6 +1522,8 @@ const state = {
   refinementText: '',
   pendingRefinement: '',
   refinementBaseImage: null, // approved result image that a local refinement edits in place
+  refinementRefImage: null,  // optional single-item reference image for local refinement
+  uploadSheetOpen: false,    // home-page sheet: camera / album / sample rooms
   compStatus: 'good',    // camera composition status
   selectedStyle: null,
   customStyle: null,   // { img: dataURL } uploaded reference image for style-select page
@@ -1775,7 +1834,7 @@ async function requestModelGeneration(){
     || (state.customStyle.sourceStyleId && state.customStyle.sourceStyleId === state.selectedStyle)
   ));
   const styleRef = referenceMatchesSelection ? state.customStyle.img : null;
-  const localRefinement = Boolean(state.pendingRefinement && state.refinementBaseImage);
+  const localRefinement = Boolean(state.refinementBaseImage && (state.pendingRefinement || state.refinementRefImage));
   const payload = {
     roomImage: state.photo || IMG('camera-room-9',800,1400),
     roomMask: state.roomMask,
@@ -1791,6 +1850,7 @@ async function requestModelGeneration(){
     outputs: 1,
     preserveStructure: true,
     refinementInstruction: state.pendingRefinement || null,
+    refinementReferenceImage: localRefinement ? (state.refinementRefImage || null) : null,
     baseResultImage: localRefinement ? state.refinementBaseImage : null,
     generationMode: localRefinement ? 'local_refinement' : 'layout_guided_edit'
   };
@@ -1866,9 +1926,35 @@ function render(){
     inspiration: renderInspiration, inspirationDetail: renderInspirationDetail, history: renderHistory,
     profile: renderProfile, favorites: renderFavorites,
   };
-  screen.innerHTML = renderers[state.page]();
+  screen.innerHTML = renderers[state.page]() + (state.uploadSheetOpen ? renderUploadSheet() : '');
   navHost.innerHTML = state.page === 'style' ? renderStyleActionBar() : (TAB_PAGES.includes(state.page) ? renderBottomNav() : '');
   attachHandlers();
+}
+
+function renderUploadSheet(){
+  return `
+  <div class="sheet-mask" data-action="close-upload-sheet"></div>
+  <div class="upload-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">上传你的空间照片</div>
+    <button class="sheet-opt" data-action="sheet-camera">
+      <span class="opt-ic"><svg viewBox="0 0 24 24"><path d="M4 8.5h3l1.6-2.3h6.8L17 8.5h3v10H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span>
+      <span>拍摄房间<span class="opt-sub">打开相机，现场拍一张空房照片</span></span>
+    </button>
+    <button class="sheet-opt" data-action="sheet-album">
+      <span class="opt-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M4 17l5-4.5 4 3.5 3.5-3 3.5 3.5"/></svg></span>
+      <span>从相册导入<span class="opt-sub">选择手机里已有的照片</span></span>
+    </button>
+    <div class="sheet-divider">没有空房照片？用示例空间体验</div>
+    <div class="sheet-samples">
+      ${SAMPLE_ROOMS.map((room, index) => `
+      <button class="sheet-sample" data-action="use-sample-room" data-sample="${index}" style="background-image:url('${room.img}')">
+        <span class="s-badge">一键体验</span>
+        <span class="s-lab">${room.name}</span>
+      </button>`).join('')}
+    </div>
+    <button class="sheet-cancel" data-action="close-upload-sheet">取消</button>
+  </div>`;
 }
 
 function renderBottomNav(){
@@ -1883,7 +1969,7 @@ function renderBottomNav(){
       <button class="nav-item ${state.page===it.id?'active':''}" data-nav="${it.id}">
         ${it.icon}<span>${it.label}</span>
       </button>`).join('')}
-    <button class="nav-create" data-nav="camera" aria-label="上传我家照片"><span class="plus-core"></span></button>
+    <button class="nav-create" data-action="open-upload-sheet" aria-label="上传我家照片"><span class="plus-core"></span></button>
     ${items.slice(2).map(it => `
       <button class="nav-item ${state.page===it.id?'active':''}" data-nav="${it.id}">
         ${it.icon}<span>${it.label}</span>
@@ -2104,14 +2190,16 @@ function renderResult(){
   <div class="result-note">✓ 已按原空间生成，请滑动对比家具布置效果。</div>
   <div class="refine-panel">
     <div class="refine-title">继续调整这套方案</div>
-    <div class="refine-sub">描述局部调整（如“把地毯换成芥末黄色”）只会修改对应物件；输入“整套换一版”或留空则重新生成整套方案</div>
     <div class="refine-compose">
-      <input class="refine-input" id="refineInput" value="${escapeText(state.refinementText)}" placeholder="例如：把地毯换成芥末黄色" maxlength="80" />
+      ${state.refinementRefImage
+        ? `<span class="refine-chip" style="background-image:url('${state.refinementRefImage}')"><button class="refine-chip-x" data-action="refine-ref-clear" aria-label="移除参考图">×</button></span>`
+        : `<button class="refine-add" data-action="refine-ref-upload" aria-label="上传单品参考图">＋</button>`}
+      <input class="refine-input" id="refineInput" value="${escapeText(state.refinementText)}" placeholder="${state.refinementRefImage ? '可补充说明，如：把地毯换成参考图这种' : '例如：上传单品参考图，或“把地毯换成蓝色”'}" maxlength="80" />
     </div>
   </div>
   <div class="result-actions">
-    <button class="btn-secondary" data-action="regenerate">重新生成</button>
-    <button class="btn-primary" data-action="save-result">保存图片</button>
+    <button class="btn-primary" data-action="regenerate">重新生成</button>
+    <button class="btn-secondary" data-action="save-result">保存图片</button>
   </div>
   <div class="shop-entry" data-action="goto-shopping-list" data-planid="${plan.id}">
     <div class="icon">${ICONS.bag}</div>
@@ -2549,6 +2637,45 @@ function handleAction(action, el){
       nav('camera');
       break;
     }
+    case 'open-upload-sheet':
+      state.uploadSheetOpen = true;
+      render();
+      break;
+    case 'close-upload-sheet':
+      state.uploadSheetOpen = false;
+      render();
+      break;
+    case 'sheet-camera':
+      state.uploadSheetOpen = false;
+      nav('camera');
+      break;
+    case 'sheet-album':
+      state.uploadSheetOpen = false;
+      render();
+      document.getElementById('fileInput').click();
+      break;
+    case 'use-sample-room': {
+      const sample = SAMPLE_ROOMS[Number(el.getAttribute('data-sample'))];
+      if(!sample) return;
+      state.uploadSheetOpen = false;
+      render();
+      showToast('正在载入示例空间…', 2400);
+      fetch(sample.img)
+        .then(res => { if(!res.ok) throw new Error(`sample ${res.status}`); return res.blob(); })
+        .then(blob => new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        }))
+        .then(dataUrl => resizeImageDataUrl(dataUrl, 1024, 0.86))
+        .then(image => setRoomPhoto(image, { preserveReference: state.preserveReferenceForNextRoomUpload }))
+        .catch(err => {
+          console.warn('sample room load failed', err);
+          showToast('示例空间载入失败，请重试');
+        });
+      break;
+    }
     case 'search':
       showToast('搜索功能即将上线');
       break;
@@ -2593,15 +2720,25 @@ function handleAction(action, el){
       state.pendingRefinement = '';
       state.refinementText = '';
       state.refinementBaseImage = null;
+      state.refinementRefImage = null;
       state.generatedPlans = null;
       state.generationMeta = null;
       state.generationRunId++;
       nav('generating');
       break;
+    case 'refine-ref-upload':
+      document.getElementById('refineRefInput').click();
+      break;
+    case 'refine-ref-clear':
+      state.refinementRefImage = null;
+      render();
+      break;
     case 'regenerate': {
       state.pendingRefinement = String(state.refinementText || '').trim();
       state.refinementBaseImage = null;
-      if(state.pendingRefinement && !isGlobalRefinement(state.pendingRefinement)){
+      const wantsLocalEdit = Boolean(state.refinementRefImage)
+        || (state.pendingRefinement && !isGlobalRefinement(state.pendingRefinement));
+      if(wantsLocalEdit){
         // Local edits only apply to a result generated in this session from the
         // current photo; anything else falls back to a full regeneration.
         const currentPlan = state.photo && state.generationMeta && state.generatedPlans ? planFor(state.resultTab) : null;
@@ -2707,6 +2844,19 @@ document.getElementById('cameraInput').addEventListener('change', function(e){
   e.target.value = '';
 });
 
+document.getElementById('refineRefInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file){ return; }
+  const reader = new FileReader();
+  reader.onload = async function(ev){
+    state.refinementRefImage = await resizeImageDataUrl(ev.target.result, 900, 0.85);
+    if(state.page === 'result') render();
+    showToast('已选择单品参考图，可补充文字说明');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
 document.getElementById('styleFileInput').addEventListener('change', function(e){
   const file = e.target.files[0];
   if(!file){ return; }
@@ -2749,6 +2899,7 @@ function runGeneratingSequence(){
     state.pendingRefinement = '';
     state.refinementText = '';
     state.refinementBaseImage = null;
+    state.refinementRefImage = null;
   }).catch((err)=>{
     generationError = err;
   });
