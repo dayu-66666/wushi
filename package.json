@@ -1,0 +1,10 @@
+{
+  "name": "wushi-gateway",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node model-gateway.mjs"
+  }
+}
