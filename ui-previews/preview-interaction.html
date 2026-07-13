@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-<title>吾室</title>
+<title>理想家</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet" />
 <style>
@@ -247,6 +247,49 @@
     0%,100%{box-shadow:0 0 0 0 rgba(244,241,234,0.28);}
     50%{box-shadow:0 0 0 12px rgba(244,241,234,0);}
   }
+
+  /* ===== LOGIN / AUTH ===== */
+  .login{
+    display:flex;flex-direction:column;height:100%;padding:0 34px;
+    background:radial-gradient(120% 60% at 50% -10%, #14120e 0%, #050505 60%);
+  }
+  .login-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .lg-mark{margin-bottom:18px;}
+  .lg-name{font-family:var(--font-serif);font-size:36px;font-weight:600;letter-spacing:6px;text-indent:6px;margin:0 0 10px;}
+  .lg-latin{font-size:10px;letter-spacing:6px;color:var(--gold);margin:0 0 16px;text-indent:6px;}
+  .lg-slogan{font-size:13px;color:var(--ink-soft);margin:0;}
+  .login-form{display:flex;flex-direction:column;gap:13px;padding-bottom:30px;}
+  .auth-field{
+    display:flex;align-items:center;gap:10px;background:var(--paper);
+    border:1px solid var(--line);border-radius:14px;padding:15px 16px;
+  }
+  .auth-field input{background:none;border:none;outline:none;color:var(--ink);font-size:15px;flex:1;font-family:var(--font-sans);}
+  .auth-field input::placeholder{color:#5d574f;}
+  .login-error{font-size:12.5px;color:#D9856F;text-align:center;min-height:16px;margin:-4px 0 0;}
+  .login-or{display:flex;align-items:center;gap:14px;color:#5d574f;font-size:12px;margin:4px 0 0;}
+  .login-or::before,.login-or::after{content:'';flex:1;height:1px;background:var(--line);}
+  .guest-btn{
+    background:none;border:1px solid var(--line);border-radius:999px;color:var(--ink);
+    padding:14px 20px;font-size:14px;font-weight:500;text-align:center;cursor:pointer;
+  }
+  .guest-note{font-size:11.5px;color:var(--ink-soft);text-align:center;line-height:1.7;margin:0;}
+  .login-terms{font-size:10.5px;color:#5d574f;text-align:center;margin:10px 0 0;line-height:1.6;}
+  .auth-sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:90;margin:0 auto;max-width:460px;
+    background:#141311;border-radius:24px 24px 0 0;padding:18px 28px 32px;
+    border:1px solid #2A2723;border-bottom:0;
+  }
+  .auth-sheet .btn-primary{width:100%;}
+  .auth-mask{z-index:89;}
+  .quota-chip{
+    display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--gold);
+    border:1px solid #3a342c;border-radius:999px;padding:5px 11px;margin-bottom:14px;
+  }
+  .quota-chip i{width:5px;height:5px;border-radius:50%;background:var(--gold);}
+  .auth-sheet-title{font-family:var(--font-serif);font-size:22px;font-weight:600;margin:0 0 8px;}
+  .auth-sheet-sub{font-size:13px;color:var(--ink-soft);line-height:1.75;margin:0 0 20px;}
+  .auth-sheet .text-btn{margin-top:12px;color:var(--ink-soft);font-weight:500;width:100%;}
+  .profile-logout .label{color:#C98D7B;}
 
   /* ===== HOME ===== */
   .home-hero{
@@ -1331,6 +1374,7 @@ const ASSET = path => location.protocol === 'file:' ? `../${path}` : `/${path}`;
 const MODEL_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/generate' : '/api/generate';
 const ROOM_ANALYZE_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/analyze-room' : '/api/analyze-room';
 const STYLE_ANALYZE_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/analyze-style' : '/api/analyze-style';
+const AUTH_API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/auth' : '/api/auth';
 const STYLE_IMAGE_COUNTS = {
   cream: 5,
   wood: 5,
@@ -1540,6 +1584,11 @@ const state = {
   generationMeta: null,
   generationRunId: 0,
   levelAssist: false,
+  user: null,            // { email } when logged in via Supabase
+  authSheet: null,       // { reason: 'quota' | 'save' | 'favorite' } bottom sheet
+  loginBusy: false,
+  loginError: '',
+  loginNext: null,       // page to return to after a login triggered mid-flow
 };
 
 const TAB_PAGES = ['home','inspiration','history','profile'];
@@ -1764,6 +1813,85 @@ function escapeText(value){
   })[char]);
 }
 
+/* ============ AUTH ============ */
+const SESSION_KEY = 'lxj_session';
+const GUEST_GENS_KEY = 'lxj_guest_gens';
+const GUEST_SEEN_KEY = 'lxj_guest_seen';
+const GUEST_FREE_GENS = 2;
+
+function loadSession(){
+  try{ return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; }catch{ return null; }
+}
+function saveSession(session){
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+function clearSession(){
+  localStorage.removeItem(SESSION_KEY);
+}
+function guestGensUsed(){
+  return parseInt(localStorage.getItem(GUEST_GENS_KEY) || '0', 10) || 0;
+}
+function guestGensLeft(){
+  return Math.max(0, GUEST_FREE_GENS - guestGensUsed());
+}
+function openAuthSheet(reason){
+  state.authSheet = { reason };
+  render();
+}
+function closeAuthSheet(){
+  state.authSheet = null;
+  render();
+}
+// Generation costs real model money; guests get GUEST_FREE_GENS tries per device.
+function requireGenerationCredit(){
+  if(state.user) return true;
+  if(guestGensLeft() > 0) return true;
+  openAuthSheet('quota');
+  return false;
+}
+function requireLogin(reason){
+  if(state.user) return true;
+  openAuthSheet(reason);
+  return false;
+}
+async function authLogin(email, password){
+  const response = await fetch(`${AUTH_API_BASE}/login`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ email, password })
+  });
+  const data = await response.json().catch(()=> ({}));
+  if(!response.ok) throw new Error(data.error || '登录失败，请稍后再试');
+  saveSession(data);
+  state.user = { email: data.email };
+  return data;
+}
+function logout(){
+  clearSession();
+  state.user = null;
+}
+// Restore the saved session on boot; refresh the token in the background so it
+// stays valid, and only sign the user out when the server rejects the refresh.
+function initAuth(){
+  const session = loadSession();
+  if(!session || !session.refreshToken) return;
+  state.user = { email: session.email };
+  fetch(`${AUTH_API_BASE}/refresh`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ refreshToken: session.refreshToken })
+  }).then(async response=>{
+    const data = await response.json().catch(()=> ({}));
+    if(response.ok && data.refreshToken){
+      saveSession(data);
+      state.user = { email: data.email || session.email };
+    } else if(response.status === 400 || response.status === 401){
+      logout();
+      render();
+    }
+  }).catch(()=>{ /* offline: keep the optimistic session */ });
+}
+
 function localMockGenerationPayload(){
   const base = STYLES.find(s=>s.id===state.selectedStyle) || STYLES[0];
   const idx = Math.max(0, STYLES.indexOf(base));
@@ -1924,9 +2052,11 @@ function render(){
     home: renderHome, camera: renderCamera, photoCheck: renderPhotoCheck, style: renderStyle, generating: renderGenerating,
     result: renderResult, shoppingList: renderShoppingList,
     inspiration: renderInspiration, inspirationDetail: renderInspirationDetail, history: renderHistory,
-    profile: renderProfile, favorites: renderFavorites,
+    profile: renderProfile, favorites: renderFavorites, login: renderLogin,
   };
-  screen.innerHTML = renderers[state.page]() + (state.uploadSheetOpen ? renderUploadSheet() : '');
+  screen.innerHTML = renderers[state.page]()
+    + (state.uploadSheetOpen ? renderUploadSheet() : '')
+    + (state.authSheet ? renderAuthSheet() : '');
   navHost.innerHTML = state.page === 'style' ? renderStyleActionBar() : (TAB_PAGES.includes(state.page) ? renderBottomNav() : '');
   attachHandlers();
 }
@@ -1992,7 +2122,7 @@ function renderHome(){
     </div>
     <div class="home-scrim"></div>
     <div class="home-copy">
-      <div class="home-brand">吾室</div>
+      <div class="home-brand">理想家</div>
       <div class="home-title">家，还有另一种样子</div>
       <div class="home-sub">让家的每一种可能，都能被看见。</div>
     </div>
@@ -2295,7 +2425,7 @@ function renderInspiration(){
   return `
   <div class="inspiration-page">
     <header class="inspiration-head">
-      <div class="inspiration-brand">吾室</div>
+      <div class="inspiration-brand">理想家</div>
       <h1 class="inspiration-title">灵感</h1>
       <p class="inspiration-sub">设计你自己理想中的家</p>
     </header>
@@ -2316,7 +2446,7 @@ function renderInspirationDetail(){
   <div class="inspiration-detail">
     <div class="inspiration-detail-top">
       <button class="icon-btn" data-action="back-inspiration" aria-label="返回灵感页">${ICONS.back}</button>
-      <div class="inspiration-detail-kicker">吾室 · 灵感</div>
+      <div class="inspiration-detail-kicker">理想家 · 灵感</div>
       <button class="icon-btn fav-toggle ${isFavorite?'active':''}" data-action="toggle-fav-insp" data-seed="${item.seed}" aria-label="${isFavorite?'取消收藏':'收藏'}">
         ${isFavorite ? ICONS.heartFilled : ICONS.heart}
       </button>
@@ -2416,14 +2546,79 @@ function renderFavorites(){
   </div>`}`;
 }
 
+/* ============ LOGIN ============ */
+const LOGO_MARK = `<svg class="lg-mark" width="46" height="40" viewBox="0 0 46 40" fill="none" stroke="#B7A58C" stroke-width="1.6">
+  <path d="M4 18 L23 4 L42 18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M10 17 V36 H36 V17" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20 36 V26 H26 V36" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+function renderLogin(){
+  return `
+  <div class="login">
+    <div class="login-top">
+      ${LOGO_MARK}
+      <div class="lg-name">理想家</div>
+      <div class="lg-latin">L I X I A N G J I A</div>
+      <p class="lg-slogan">让家的每一种可能，都能被看见</p>
+    </div>
+    <div class="login-form">
+      <div class="auth-field"><input id="loginEmail" type="email" autocomplete="email" placeholder="输入邮箱地址" /></div>
+      <div class="auth-field"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="密码（至少 6 位）" /></div>
+      <div class="login-error">${escapeText(state.loginError)}</div>
+      <button class="btn-primary ${state.loginBusy?'disabled':''}" data-action="do-login">${state.loginBusy ? '登录中…' : '登录 / 注册'}</button>
+      <p class="guest-note">首次使用的邮箱会自动创建账号</p>
+      <div class="login-or">或</div>
+      <button class="guest-btn" data-action="login-guest">先逛逛，暂不登录</button>
+      <p class="guest-note">游客可免费生成 ${GUEST_FREE_GENS} 次 · 登录后不限次数</p>
+      <p class="login-terms">继续即代表同意 用户协议 与 隐私政策</p>
+    </div>
+  </div>`;
+}
+
+const AUTH_SHEET_COPY = {
+  quota: {
+    chip: `免费体验 ${GUEST_FREE_GENS} 次已用完`,
+    title: '登录后继续生成',
+    sub: '登录只要 10 秒：邮箱加密码就行。登录后生成不限次数，方案也会记在你的账号里。'
+  },
+  save: {
+    chip: null,
+    title: '登录后保存这个方案',
+    sub: '保存到你的账号里，换手机也不会丢；还能随时回来继续调整。'
+  },
+  favorite: {
+    chip: null,
+    title: '登录后收藏',
+    sub: '收藏会记在你的账号里，随时回来找灵感。'
+  }
+};
+
+function renderAuthSheet(){
+  const copy = AUTH_SHEET_COPY[state.authSheet.reason] || AUTH_SHEET_COPY.save;
+  const left = guestGensLeft();
+  const chip = copy.chip || (left > 0 ? `游客还可免费生成 ${left} 次` : null);
+  return `
+  <div class="sheet-mask auth-mask" data-action="auth-sheet-close"></div>
+  <div class="auth-sheet">
+    <div class="sheet-handle"></div>
+    ${chip ? `<div class="quota-chip"><i></i>${chip}</div>` : ''}
+    <div class="auth-sheet-title">${copy.title}</div>
+    <p class="auth-sheet-sub">${copy.sub}</p>
+    <button class="btn-primary" data-action="auth-sheet-login">邮箱登录 / 注册</button>
+    <button class="text-btn" data-action="auth-sheet-close">再逛逛</button>
+  </div>`;
+}
+
 /* ============ PROFILE ============ */
 function renderProfile(){
+  const email = state.user ? state.user.email : null;
   return `
-  <div class="profile-head">
-    <div class="avatar">游</div>
-    <div>
-      <div class="name">游客用户</div>
-      <div class="sub">登录后可同步方案到云端（暂未开放）</div>
+  <div class="profile-head" ${email ? '' : 'data-action="goto-login" style="cursor:pointer"'}>
+    <div class="avatar">${email ? escapeText(email[0].toUpperCase()) : '游'}</div>
+    <div style="min-width:0">
+      <div class="name" style="word-break:break-all">${email ? escapeText(email) : '游客用户'}</div>
+      <div class="sub">${email ? '已登录 · 方案记在这个账号里' : `点击登录 / 注册 · 游客还可免费生成 ${guestGensLeft()} 次`}</div>
     </div>
   </div>
   <div class="profile-list">
@@ -2447,6 +2642,11 @@ function renderProfile(){
         <div class="text"><div class="label">硬装模式</div></div>
       </div><span class="badge-soon">即将开放</span>
     </div>
+    ${email ? `<div class="profile-row profile-logout" data-action="logout">
+      <div class="left"><div class="icon">${ICONS.back}</div>
+        <div class="text"><div class="label">退出登录</div></div>
+      </div>
+    </div>` : ''}
   </div>`;
 }
 
@@ -2715,8 +2915,65 @@ function handleAction(action, el){
     case 'upload-style-ref':
       document.getElementById('styleFileInput').click();
       break;
+    case 'goto-login':
+      state.loginNext = TAB_PAGES.includes(state.page) ? state.page : 'profile';
+      state.loginError = '';
+      state.authSheet = null;
+      nav('login');
+      break;
+    case 'do-login': {
+      if(state.loginBusy) return;
+      const email = String((document.getElementById('loginEmail')||{}).value || '').trim();
+      const password = String((document.getElementById('loginPassword')||{}).value || '');
+      const fail = (msg)=>{
+        state.loginBusy = false;
+        state.loginError = msg;
+        render();
+        const emailInput = document.getElementById('loginEmail');
+        const passwordInput = document.getElementById('loginPassword');
+        if(emailInput) emailInput.value = email;
+        if(passwordInput) passwordInput.value = password;
+      };
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ fail('请输入正确的邮箱地址'); return; }
+      if(password.length < 6){ fail('密码至少 6 位'); return; }
+      state.loginBusy = true;
+      state.loginError = '';
+      el.classList.add('disabled'); el.textContent = '登录中…';
+      authLogin(email, password).then((data)=>{
+        state.loginBusy = false;
+        localStorage.setItem(GUEST_SEEN_KEY, '1');
+        const next = state.loginNext || 'home';
+        state.loginNext = null;
+        nav(next, {push:false});
+        showToast(data.isNew ? '注册成功，欢迎来到理想家' : '欢迎回来');
+      }).catch((error)=>{
+        fail(error.message || '登录失败，请稍后再试');
+      });
+      break;
+    }
+    case 'login-guest':
+      localStorage.setItem(GUEST_SEEN_KEY, '1');
+      state.loginError = '';
+      nav(state.loginNext || 'home', {push:false});
+      state.loginNext = null;
+      break;
+    case 'logout':
+      logout();
+      showToast('已退出登录');
+      render();
+      break;
+    case 'auth-sheet-close':
+      closeAuthSheet();
+      break;
+    case 'auth-sheet-login':
+      state.authSheet = null;
+      state.loginNext = TAB_PAGES.includes(state.page) ? state.page : 'result';
+      state.loginError = '';
+      nav('login');
+      break;
     case 'generate':
       if(!state.selectedStyle){ showToast('请先选择一个家具风格'); return; }
+      if(!requireGenerationCredit()) return;
       state.pendingRefinement = '';
       state.refinementText = '';
       state.refinementBaseImage = null;
@@ -2734,6 +2991,7 @@ function handleAction(action, el){
       render();
       break;
     case 'regenerate': {
+      if(!requireGenerationCredit()) return;
       state.pendingRefinement = String(state.refinementText || '').trim();
       state.refinementBaseImage = null;
       const wantsLocalEdit = Boolean(state.refinementRefImage)
@@ -2751,6 +3009,7 @@ function handleAction(action, el){
       break;
     }
     case 'save-result': {
+      if(!requireLogin('save')) return;
       const plan = planFor(state.resultTab);
       if(!state.historyItems.some(item => item.img === plan.after)){
         state.historyItems.unshift({
@@ -2769,6 +3028,7 @@ function handleAction(action, el){
       showToast('搭配分享功能开发中');
       break;
     case 'save-list':
+      if(!requireLogin('save')) return;
       showToast('已保存这套搭配');
       break;
     case 'copy-list': {
@@ -2784,6 +3044,7 @@ function handleAction(action, el){
       break;
     }
     case 'toggle-fav-result': {
+      if(!requireLogin('favorite')) return;
       const planId = el.getAttribute('data-planid');
       if(state.favoriteResultStyles.has(planId)){
         state.favoriteResultStyles.delete(planId);
@@ -2796,6 +3057,7 @@ function handleAction(action, el){
       break;
     }
     case 'toggle-fav-insp': {
+      if(!requireLogin('favorite')) return;
       const seed = el.getAttribute('data-seed');
       if(state.favoriteInsp.has(seed)){
         state.favoriteInsp.delete(seed);
@@ -2887,6 +3149,9 @@ function runGeneratingSequence(){
       };
     });
     state.generatedPlans = plans;
+    if(!state.user){
+      localStorage.setItem(GUEST_GENS_KEY, String(guestGensUsed() + 1));
+    }
     state.generationMeta = {
       provider: data.provider || 'unknown',
       model: data.model || '',
@@ -2964,6 +3229,10 @@ function setupCompareSlider(){
 }
 
 /* ============ INIT ============ */
+initAuth();
+if(!state.user && !localStorage.getItem(GUEST_SEEN_KEY)){
+  state.page = 'login';
+}
 render();
 </script>
 </body>

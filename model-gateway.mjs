@@ -2081,6 +2081,50 @@ async function handleGenerate(req, res) {
   return json(res, 200, mockPlans(input));
 }
 
+const AUTH_ERROR_MESSAGES = [
+  [/rate limit|too many/i, "尝试太频繁了，请稍等一分钟再试"],
+  [/weak_password|at least/i, "密码太简单，至少需要 6 位"],
+  [/invalid login|invalid_credentials|invalid_grant/i, "邮箱或密码不正确"]
+];
+
+function authSession(data, isNew) {
+  return {
+    accessToken: data.access_token,
+    refreshToken: data.refresh_token,
+    expiresAt: data.expires_at,
+    email: data.user?.email || null,
+    isNew
+  };
+}
+
+async function supabaseAuthRequest(pathname, body) {
+  const base = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
+  const anonKey = process.env.SUPABASE_ANON_KEY;
+  if (!base || !anonKey) {
+    return { ok: false, status: 503, error: "登录服务未配置" };
+  }
+  let response;
+  try {
+    response = await fetch(base + pathname, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: anonKey },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(20000)
+    });
+  } catch (error) {
+    console.error("[gateway] supabase auth unreachable:", error.message);
+    return { ok: false, status: 502, error: "登录服务暂时无法访问，请稍后再试" };
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const raw = `${data.error_code || ""} ${data.msg || data.message || data.error_description || data.error || "auth request failed"}`.trim();
+    const friendly = AUTH_ERROR_MESSAGES.find(([pattern]) => pattern.test(raw));
+    console.error(`[gateway] supabase auth ${pathname} -> ${response.status}: ${raw}`);
+    return { ok: false, status: response.status >= 500 ? 502 : response.status, error: friendly ? friendly[1] : raw, code: raw };
+  }
+  return { ok: true, status: 200, data };
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || "127.0.0.1"}`);
@@ -2193,6 +2237,36 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === "POST" && url.pathname === "/api/generate") {
       return await handleGenerate(req, res);
+    }
+    if (req.method === "POST" && url.pathname === "/api/auth/login") {
+      const input = await readBody(req);
+      const email = String(input.email || "").trim().toLowerCase();
+      const password = String(input.password || "");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json(res, 400, { error: "请输入正确的邮箱地址" });
+      if (password.length < 6) return json(res, 400, { error: "密码至少 6 位" });
+      const login = await supabaseAuthRequest("/auth/v1/token?grant_type=password", { email, password });
+      if (login.ok) return json(res, 200, authSession(login.data, false));
+      if (!/invalid/i.test(login.code || "")) return json(res, login.status, { error: login.error });
+      const signup = await supabaseAuthRequest("/auth/v1/signup", { email, password });
+      if (signup.ok && signup.data.access_token) return json(res, 200, authSession(signup.data, true));
+      if (/already|exists/i.test(signup.code || "")) return json(res, 400, { error: "密码不正确，请重试" });
+      return json(res, signup.status, { error: signup.error });
+    }
+    if (req.method === "POST" && url.pathname === "/api/auth/refresh") {
+      const input = await readBody(req);
+      const refreshToken = String(input.refreshToken || "").trim();
+      if (!refreshToken) return json(res, 400, { error: "refreshToken missing" });
+      const result = await supabaseAuthRequest("/auth/v1/token?grant_type=refresh_token", {
+        refresh_token: refreshToken
+      });
+      if (!result.ok) return json(res, result.status, { error: result.error });
+      const data = result.data;
+      return json(res, 200, {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresAt: data.expires_at,
+        email: data.user?.email || null
+      });
     }
     return json(res, 404, { error: "not found" });
   } catch (err) {
