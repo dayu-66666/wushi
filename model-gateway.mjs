@@ -2239,6 +2239,23 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/api/generate") {
       return await handleGenerate(req, res);
     }
+    if (req.method === "POST" && url.pathname === "/api/auth/send-otp") {
+      const input = await readBody(req);
+      const email = String(input.email || "").trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json(res, 400, { error: "请输入正确的邮箱地址" });
+      const result = await supabaseAuthRequest("/auth/v1/otp", { email, create_user: true });
+      if (!result.ok) return json(res, result.status, { error: result.error });
+      return json(res, 200, { ok: true });
+    }
+    if (req.method === "POST" && url.pathname === "/api/auth/verify-otp") {
+      const input = await readBody(req);
+      const email = String(input.email || "").trim().toLowerCase();
+      const token = String(input.token || "").trim();
+      if (!email || !/^\d{6}$/.test(token)) return json(res, 400, { error: "请输入 6 位验证码" });
+      const result = await supabaseAuthRequest("/auth/v1/verify", { type: "email", email, token });
+      if (!result.ok) return json(res, result.status, { error: result.error });
+      return json(res, 200, authSession(result.data, false));
+    }
     if (req.method === "POST" && url.pathname === "/api/auth/login") {
       const input = await readBody(req);
       const email = String(input.email || "").trim().toLowerCase();

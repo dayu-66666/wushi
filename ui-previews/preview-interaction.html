@@ -265,6 +265,8 @@
   }
   .auth-field input{background:none;border:none;outline:none;color:var(--ink);font-size:15px;flex:1;font-family:var(--font-sans);}
   .auth-field input::placeholder{color:#5d574f;}
+  .auth-field .send{font-size:13px;color:var(--gold);font-weight:600;flex:none;cursor:pointer;user-select:none;}
+  .auth-field .send.disabled{color:#5d574f;cursor:default;}
   .login-error{font-size:12.5px;color:#D9856F;text-align:center;min-height:16px;margin:-4px 0 0;}
   .login-or{display:flex;align-items:center;gap:14px;color:#5d574f;font-size:12px;margin:4px 0 0;}
   .login-or::before,.login-or::after{content:'';flex:1;height:1px;background:var(--line);}
@@ -1642,6 +1644,7 @@ const state = {
   authSheet: null,       // { reason: 'quota' | 'save' | 'favorite' } bottom sheet
   loginBusy: false,
   loginError: '',
+  otpUntil: 0,           // send-code cooldown deadline (ms timestamp)
   loginNext: null,       // page to return to after a login triggered mid-flow
 };
 
@@ -1908,17 +1911,41 @@ function requireLogin(reason){
   openAuthSheet(reason);
   return false;
 }
-async function authLogin(email, password){
-  const response = await fetch(`${AUTH_API_BASE}/login`, {
+async function authSendOtp(email){
+  const response = await fetch(`${AUTH_API_BASE}/send-otp`, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ email, password })
+    body:JSON.stringify({ email })
+  });
+  const data = await response.json().catch(()=> ({}));
+  if(!response.ok) throw new Error(data.error || '验证码发送失败，请稍后再试');
+  return data;
+}
+async function authVerifyOtp(email, token){
+  const response = await fetch(`${AUTH_API_BASE}/verify-otp`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ email, token })
   });
   const data = await response.json().catch(()=> ({}));
   if(!response.ok) throw new Error(data.error || '登录失败，请稍后再试');
   saveSession(data);
   state.user = { email: data.email };
   return data;
+}
+let otpTimerId = null;
+function startOtpCountdown(){
+  clearInterval(otpTimerId);
+  otpTimerId = setInterval(()=>{
+    const btn = document.getElementById('otpSendBtn');
+    const left = Math.ceil((state.otpUntil - Date.now()) / 1000);
+    if(left <= 0){
+      clearInterval(otpTimerId);
+      if(btn){ btn.textContent = '获取验证码'; btn.classList.remove('disabled'); }
+      return;
+    }
+    if(btn){ btn.textContent = `${left}s 后重发`; btn.classList.add('disabled'); }
+  }, 500);
 }
 function logout(){
   clearSession();
@@ -2621,7 +2648,10 @@ function renderLogin(){
     </div>
     <div class="login-form">
       <div class="auth-field"><input id="loginEmail" type="email" autocomplete="email" placeholder="输入邮箱地址" /></div>
-      <div class="auth-field"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="密码（至少 6 位）" /></div>
+      <div class="auth-field">
+        <input id="loginCode" type="tel" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6 位验证码" />
+        <span class="send ${state.otpUntil > Date.now() ? 'disabled' : ''}" id="otpSendBtn" data-action="send-otp">${state.otpUntil > Date.now() ? Math.ceil((state.otpUntil - Date.now())/1000) + 's 后重发' : '获取验证码'}</span>
+      </div>
       <div class="login-error">${escapeText(state.loginError)}</div>
       <button class="btn-primary ${state.loginBusy?'disabled':''}" data-action="do-login">${state.loginBusy ? '登录中…' : '登录 / 注册'}</button>
       <p class="guest-note">新邮箱自动注册</p>
@@ -2978,31 +3008,57 @@ function handleAction(action, el){
       state.authSheet = null;
       nav('login');
       break;
+    case 'send-otp': {
+      if(state.otpUntil > Date.now()) return;
+      const email = String((document.getElementById('loginEmail')||{}).value || '').trim();
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+        state.loginError = '请输入正确的邮箱地址';
+        render();
+        const emailInput = document.getElementById('loginEmail');
+        if(emailInput) emailInput.value = email;
+        return;
+      }
+      state.loginError = '';
+      el.textContent = '发送中…';
+      el.classList.add('disabled');
+      authSendOtp(email).then(()=>{
+        state.otpUntil = Date.now() + 60000;
+        el.textContent = '60s 后重发';
+        showToast('验证码已发出，请查收邮件（收不到时看下垃圾箱）', 3600);
+        startOtpCountdown();
+      }).catch((error)=>{
+        state.loginError = error.message || '验证码发送失败，请稍后再试';
+        render();
+        const emailInput = document.getElementById('loginEmail');
+        if(emailInput) emailInput.value = email;
+      });
+      return;
+    }
     case 'do-login': {
       if(state.loginBusy) return;
       const email = String((document.getElementById('loginEmail')||{}).value || '').trim();
-      const password = String((document.getElementById('loginPassword')||{}).value || '');
+      const code = String((document.getElementById('loginCode')||{}).value || '').trim();
       const fail = (msg)=>{
         state.loginBusy = false;
         state.loginError = msg;
         render();
         const emailInput = document.getElementById('loginEmail');
-        const passwordInput = document.getElementById('loginPassword');
+        const codeInput = document.getElementById('loginCode');
         if(emailInput) emailInput.value = email;
-        if(passwordInput) passwordInput.value = password;
+        if(codeInput) codeInput.value = code;
       };
       if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ fail('请输入正确的邮箱地址'); return; }
-      if(password.length < 6){ fail('密码至少 6 位'); return; }
+      if(!/^\d{6}$/.test(code)){ fail('请输入 6 位验证码'); return; }
       state.loginBusy = true;
       state.loginError = '';
       el.classList.add('disabled'); el.textContent = '登录中…';
-      authLogin(email, password).then((data)=>{
+      authVerifyOtp(email, code).then(()=>{
         state.loginBusy = false;
         localStorage.setItem(GUEST_SEEN_KEY, '1');
         const next = state.loginNext || 'home';
         state.loginNext = null;
         nav(next, {push:false});
-        showToast(data.isNew ? '注册成功，欢迎来到理想家' : '欢迎回来');
+        showToast('登录成功，欢迎来到理想家');
       }).catch((error)=>{
         fail(error.message || '登录失败，请稍后再试');
       });
