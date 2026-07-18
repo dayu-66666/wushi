@@ -829,33 +829,48 @@
   .gen-ring{
     width:96px;height:96px;border-radius:50%;
     border:6px solid var(--forest-tint);
-    border-top-color:var(--forest);
+    border-top-color:var(--gold);
     animation:spin 1.1s linear infinite;
     margin-bottom:26px;
   }
-  .gen-title{font-family:var(--font-serif); font-weight:600; font-size:19px; margin-bottom:6px;}
-  .gen-sub{font-size:13px; color:var(--ink-soft); margin-bottom:30px;}
+  .gen-title{font-family:var(--font-serif); font-weight:600; font-size:19px; margin-bottom:20px;}
   .gen-steps{width:100%; display:flex; flex-direction:column; gap:14px; margin-bottom:26px;}
   .gen-step{display:flex; align-items:center; gap:12px; text-align:left;}
   .gen-step .mark{
     width:24px;height:24px;border-radius:50%; flex-shrink:0;
     display:flex;align-items:center;justify-content:center;
-    background:#f4f1ea; color:#16130f;
-    border:1px solid rgba(244,241,234,.92);
+    background:transparent; color:var(--ink-soft);
+    border:1.5px solid var(--line);
     font-size:12.5px; font-weight:800;
+    transition:all .3s ease;
   }
-  .gen-step.active .mark,
-  .gen-step.done .mark{
-    background:#f4f1ea;
-    color:#16130f;
-    border:2px solid var(--forest);
-    font-size:12.5px;
-    font-weight:800;
-  }
-  .gen-step .label{font-size:13.5px; color:var(--ink-soft); font-weight:600;}
+  .gen-step.active .mark{background:#f4f1ea; color:#16130f; border-color:#f4f1ea;}
+  .gen-step.done .mark{background:transparent; color:var(--gold); border-color:var(--gold);}
+  .gen-step .label{font-size:13.5px; color:var(--ink-soft); font-weight:600; transition:color .3s ease;}
   .gen-step.active .label, .gen-step.done .label{color:var(--ink);}
-  .gen-progress-track{width:100%; height:6px; border-radius:999px; background:var(--line); overflow:hidden;}
-  .gen-progress-fill{height:100%; width:0%; background:var(--forest); transition:width .5s ease;}
+  .gen-step .timing{margin-left:auto; font-size:11px; color:#5d574f;}
+  .gen-step.active .timing{color:var(--gold);}
+  .gen-progress-track{
+    width:100%; height:8px; border-radius:999px; background:var(--forest-tint);
+    overflow:hidden; position:relative;
+  }
+  .gen-progress-fill{
+    height:100%; width:0%; border-radius:999px; position:relative; overflow:hidden;
+    background:linear-gradient(90deg,#8f7d63,#B7A58C 55%,#E8DFCF);
+    transition:width .3s linear;
+  }
+  .gen-progress-fill::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);
+    animation:genSheen 1.6s linear infinite;
+  }
+  @keyframes genSheen{from{transform:translateX(-100%);}to{transform:translateX(100%);}}
+  .gen-percent{
+    display:flex; justify-content:flex-end; width:100%;
+    font-size:12px; margin-top:10px;
+  }
+  .gen-percent .pct{color:var(--gold); font-weight:700; font-variant-numeric:tabular-nums;}
+  .gen-note{margin-top:16px; font-size:11.5px; color:#5d574f;}
 
   /* ===== RESULT ===== */
   .result-tabs{display:flex; gap:8px; padding:6px 18px 14px;}
@@ -901,6 +916,22 @@
     background:var(--gold-tint); color:#7A5A22; border-radius:var(--radius-sm);
     font-size:12.5px; font-weight:600;
   }
+  .result-error{
+    display:flex; align-items:center; gap:10px;
+    margin:12px 18px 0; padding:12px 14px;
+    background:#2A1613; border:1px solid #6B3226; border-radius:var(--radius-sm);
+    color:#E8A08F; font-size:13px; font-weight:600; line-height:1.6;
+  }
+  .result-error span{flex:1;}
+  .result-error-x{
+    background:none; border:none; color:#B07264; font-size:18px; line-height:1;
+    padding:2px 6px; cursor:pointer; flex:none;
+  }
+  .result-empty{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:18px; padding:120px 40px; text-align:center;
+  }
+  .result-empty p{color:var(--ink-soft); font-size:14px; margin:0;}
   .result-meta{padding:8px 18px 6px;}
   .result-meta .name{font-family:var(--font-serif); font-weight:600; font-size:17px; margin-bottom:4px;}
   .result-meta .desc{font-size:13px; color:var(--ink-soft); line-height:1.6;}
@@ -1423,7 +1454,29 @@ const INSPIRATION = STYLES.flatMap(style =>
 
 const HISTORY = [];
 
-const STEPS = ['识别墙面、地面和透视', '清除原有家具', '生成家具与软装方案', '检查结构一致性'];
+const GENERATION_PHASES = {
+  full: {
+    title: 'AI 正在为你生成方案',
+    steps: [
+      { label:'识别墙面、地面和透视', secs:5 },
+      { label:'清除原有家具', secs:5 },
+      { label:'生成家具与软装方案', secs:40 },
+      { label:'检查结构一致性', secs:10 },
+    ]
+  },
+  local: {
+    title: 'AI 正在局部调整',
+    steps: [
+      { label:'定位要修改的物件', secs:5 },
+      { label:'局部重绘', secs:40 },
+      { label:'检查一致性', secs:10 },
+    ]
+  }
+};
+function activeGenerationPhases(){
+  const isLocal = Boolean(state.refinementBaseImage && (state.pendingRefinement || state.refinementRefImage));
+  return GENERATION_PHASES[isLocal ? 'local' : 'full'];
+}
 
 const FURNITURE_LISTS = {
   cream: [
@@ -1582,6 +1635,7 @@ const state = {
   favoriteResultStyles: new Set(),
   generatedPlans: null,
   generationMeta: null,
+  generationError: null,   // last failure message, shown as a banner on the result page
   generationRunId: 0,
   levelAssist: false,
   user: null,            // { email } when logged in via Supabase
@@ -1892,26 +1946,6 @@ function initAuth(){
   }).catch(()=>{ /* offline: keep the optimistic session */ });
 }
 
-function localMockGenerationPayload(){
-  const base = STYLES.find(s=>s.id===state.selectedStyle) || STYLES[0];
-  const idx = Math.max(0, STYLES.indexOf(base));
-  return {
-    provider: 'local-fallback',
-    plans: ['A'].map((tab) => {
-      const style = state.selectedStyle === 'custom'
-        ? { id:'custom', name:'自定义参考风格', desc:'基于你上传的参考图，AI 生成的家具搭配方案。', seed:'custom' }
-        : STYLES[idx];
-      return {
-        tab,
-        id: style.id,
-        name: style.name,
-        desc: style.desc,
-        after: style.id === 'custom' && state.customStyle ? state.customStyle.img : IMG(`${style.seed}-mock-model-${tab}`, 800, 1400)
-      };
-    })
-  };
-}
-
 async function prepareInspirationReference(item){
   if(!item) return null;
   const activeImage = item.img || IMG(item.seed, 800, item.h);
@@ -1962,9 +1996,10 @@ async function requestModelGeneration(){
     || (state.customStyle.sourceStyleId && state.customStyle.sourceStyleId === state.selectedStyle)
   ));
   const styleRef = referenceMatchesSelection ? state.customStyle.img : null;
+  if(!state.photo) throw new Error('请先上传你的房间照片');
   const localRefinement = Boolean(state.refinementBaseImage && (state.pendingRefinement || state.refinementRefImage));
   const payload = {
-    roomImage: state.photo || IMG('camera-room-9',800,1400),
+    roomImage: state.photo,
     roomMask: state.roomMask,
     roomZoneMasks: state.roomZoneMasks,
     roomMaskMeta: state.roomMaskMeta,
@@ -2266,19 +2301,22 @@ function renderStyle(){
 
 /* ============ GENERATING ============ */
 function renderGenerating(){
+  const phases = activeGenerationPhases();
   return `
   <div class="gen-wrap">
     <div class="gen-ring"></div>
-    <div class="gen-title">AI 正在为你生成方案</div>
-    <div class="gen-sub">请稍候，正在保留空间结构并生成家具搭配</div>
+    <div class="gen-title">${phases.title}</div>
     <div class="gen-steps" id="genSteps">
-      ${STEPS.map((s,i) => `
+      ${phases.steps.map((s,i) => `
         <div class="gen-step" data-idx="${i}">
           <div class="mark">${i+1}</div>
-          <div class="label">${s}</div>
+          <div class="label">${s.label}</div>
+          <div class="timing">~${s.secs}秒</div>
         </div>`).join('')}
     </div>
     <div class="gen-progress-track"><div class="gen-progress-fill" id="genFill"></div></div>
+    <div class="gen-percent"><span></span><span class="pct" id="genPct">0%</span></div>
+    <div class="gen-note">全程约 1 分钟，请勿关闭页面</div>
   </div>`;
 }
 
@@ -2294,14 +2332,26 @@ function planFor(tab){
   if(isCustom){
     return { id:'custom', name:'自定义参考风格', desc:'基于你上传的参考图，AI 生成的家具搭配方案。', after: state.customStyle.img };
   }
-  const base = isCustom ? STYLES[0] : (STYLES.find(s=>s.id===state.selectedStyle) || STYLES[0]);
-  const plan = base;
-  return { ...plan, after: IMG(plan.seed+'-result',800,1400) };
+  // No real result available: never fabricate one with a placeholder image.
+  return null;
 }
 function renderResult(){
   state.resultTab = 'A';
   const plan = planFor('A');
-  const before = state.photo || IMG('camera-room-9',800,1400);
+  if(!plan){
+    return `
+  <div class="topbar">
+    <button class="icon-btn" data-action="back">${ICONS.back}</button>
+    <div class="title">生成结果</div>
+    <span style="width:38px"></span>
+  </div>
+  ${state.generationError ? `<div class="result-error"><span>${escapeText(state.generationError)}</span><button class="result-error-x" data-action="dismiss-error" aria-label="关闭">×</button></div>` : ''}
+  <div class="result-empty">
+    <p>这里还没有生成结果</p>
+    <button class="btn-primary" data-action="open-upload-sheet" style="width:auto;padding:14px 34px">上传照片开始生成</button>
+  </div>`;
+  }
+  const before = state.photo;
   const after = plan.after;
   const isFav = state.favoriteResultStyles.has(plan.id);
   return `
@@ -2310,6 +2360,8 @@ function renderResult(){
     <div class="title">生成结果</div>
     <button class="icon-btn fav-toggle ${isFav?'active':''}" data-action="toggle-fav-result" data-planid="${plan.id}">${isFav ? ICONS.heartFilled : ICONS.heart}</button>
   </div>
+  ${state.generationError ? `<div class="result-error"><span>${escapeText(state.generationError)}</span><button class="result-error-x" data-action="dismiss-error" aria-label="关闭">×</button></div>` : ''}
+  ${before ? `
   <div class="compare-wrap" id="compareWrap">
     <div class="compare-img" style="background-image:url('${before}')"></div>
     <div class="compare-img compare-after" id="compareAfter" style="background-image:url('${after}')"></div>
@@ -2317,7 +2369,11 @@ function renderResult(){
     <div class="compare-label after">改造后</div>
     <div class="compare-handle" id="compareHandle" style="left:50%"></div>
   </div>
-  <div class="result-note">✓ 已按原空间生成，请滑动对比家具布置效果。</div>
+  <div class="result-note">✓ 已按原空间生成，请滑动对比家具布置效果。</div>` : `
+  <div class="compare-wrap">
+    <div class="compare-img" style="background-image:url('${after}')"></div>
+    <div class="compare-label after">生成效果</div>
+  </div>`}
   <div class="refine-panel">
     <div class="refine-title">继续调整这套方案</div>
     <div class="refine-compose">
@@ -2372,6 +2428,7 @@ function generatedItemCropStyle(image, zone){
 }
 function renderShoppingList(){
   const plan = planFor('A');
+  if(!plan){ return renderResult(); }
   const items = FURNITURE_LISTS[plan.id] || FURNITURE_LISTS.custom;
   return `
   <div class="topbar">
@@ -2567,10 +2624,10 @@ function renderLogin(){
       <div class="auth-field"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="密码（至少 6 位）" /></div>
       <div class="login-error">${escapeText(state.loginError)}</div>
       <button class="btn-primary ${state.loginBusy?'disabled':''}" data-action="do-login">${state.loginBusy ? '登录中…' : '登录 / 注册'}</button>
-      <p class="guest-note">首次使用的邮箱会自动创建账号</p>
+      <p class="guest-note">新邮箱自动注册</p>
       <div class="login-or">或</div>
       <button class="guest-btn" data-action="login-guest">先逛逛，暂不登录</button>
-      <p class="guest-note">游客可免费生成 ${GUEST_FREE_GENS} 次 · 登录后不限次数</p>
+      <p class="guest-note">游客可免费生成 ${GUEST_FREE_GENS} 次</p>
       <p class="login-terms">继续即代表同意 用户协议 与 隐私政策</p>
     </div>
   </div>`;
@@ -2978,10 +3035,15 @@ function handleAction(action, el){
       state.refinementText = '';
       state.refinementBaseImage = null;
       state.refinementRefImage = null;
-      state.generatedPlans = null;
-      state.generationMeta = null;
+      // Keep the previous result until the new one succeeds, so a failure can
+      // fall back to it instead of an empty result page.
+      state.generationError = null;
       state.generationRunId++;
       nav('generating');
+      break;
+    case 'dismiss-error':
+      state.generationError = null;
+      render();
       break;
     case 'refine-ref-upload':
       document.getElementById('refineRefInput').click();
@@ -3002,8 +3064,7 @@ function handleAction(action, el){
         const currentPlan = state.photo && state.generationMeta && state.generatedPlans ? planFor(state.resultTab) : null;
         if(currentPlan && currentPlan.after) state.refinementBaseImage = currentPlan.after;
       }
-      state.generatedPlans = null;
-      state.generationMeta = null;
+      state.generationError = null;
       state.generationRunId++;
       nav('generating');
       break;
@@ -3011,6 +3072,7 @@ function handleAction(action, el){
     case 'save-result': {
       if(!requireLogin('save')) return;
       const plan = planFor(state.resultTab);
+      if(!plan){ showToast('还没有可保存的生成结果'); return; }
       if(!state.historyItems.some(item => item.img === plan.after)){
         state.historyItems.unshift({
           img: plan.after,
@@ -3033,6 +3095,7 @@ function handleAction(action, el){
       break;
     case 'copy-list': {
       const plan = planFor('A');
+      if(!plan){ showToast('还没有可复制的搭配清单'); return; }
       const items = FURNITURE_LISTS[plan.id] || FURNITURE_LISTS.custom;
       const text = items.map(it=>`${it.name}（${it.tag}）`).join('\n');
       if(navigator.clipboard && navigator.clipboard.writeText){
@@ -3168,33 +3231,84 @@ function runGeneratingSequence(){
   }).catch((err)=>{
     generationError = err;
   });
+  let settled = false;
+  generationPromise.finally(()=>{ settled = true; });
+
+  // Time-based pacing over the phase plan: the bar keeps moving the whole time
+  // (crawls past 95% while waiting) so a long model call never looks frozen.
+  const phases = activeGenerationPhases();
+  const totalSecs = phases.steps.reduce((sum, step) => sum + step.secs, 0);
   const stepsEls = () => Array.from(document.querySelectorAll('#genSteps .gen-step'));
-  const fill = document.getElementById('genFill');
-  let i = 0;
-  const total = STEPS.length;
-  function step(){
-    const els = stepsEls();
-    if(i > 0) els[i-1].classList.remove('active');
-    if(i > 0) els[i-1].classList.add('done');
-    if(i < total){
-      els[i].classList.add('active');
-      fill.style.width = `${Math.round(((i+1)/total)*100)}%`;
-      i++;
-      setTimeout(step, 700);
-    } else {
-      setTimeout(async ()=>{
-        await generationPromise;
-        if(runId !== state.generationRunId) return;
-        if(generationError){
-          nav('style', {push:false});
-          setTimeout(()=> showToast(`生成失败：${generationError.message || '请稍后重试'}`, 4200), 0);
-          return;
-        }
-        nav('result', {push:false});
-      }, 500);
+  const startedAt = Date.now();
+  let lastIdx = -1;
+  let finishing = false;
+
+  const timer = setInterval(async ()=>{
+    if(runId !== state.generationRunId || state.page !== 'generating'){
+      clearInterval(timer);
+      return;
     }
-  }
-  setTimeout(step, 400);
+    const fill = document.getElementById('genFill');
+    const pctEl = document.getElementById('genPct');
+    const elapsed = (Date.now() - startedAt) / 1000;
+    let acc = 0, idx = phases.steps.length - 1, frac = 1;
+    for(let i = 0; i < phases.steps.length; i++){
+      const dur = phases.steps[i].secs;
+      if(elapsed < acc + dur){ idx = i; frac = (elapsed - acc) / dur; break; }
+      acc += dur;
+    }
+    let value;
+    if(elapsed >= totalSecs){
+      idx = phases.steps.length - 1;
+      value = Math.min(99, 95 + (elapsed - totalSecs) * 0.35);
+    } else {
+      const from = (acc / totalSecs) * 95;
+      const to = ((acc + phases.steps[idx].secs) / totalSecs) * 95;
+      value = from + (to - from) * frac;
+    }
+    if(fill) fill.style.width = `${value.toFixed(1)}%`;
+    if(pctEl) pctEl.textContent = `${Math.floor(value)}%`;
+    if(idx !== lastIdx){
+      lastIdx = idx;
+      stepsEls().forEach((el, i)=>{
+        el.classList.toggle('done', i < idx);
+        el.classList.toggle('active', i === idx);
+        const mark = el.querySelector('.mark');
+        if(mark) mark.innerHTML = i < idx ? '✓' : String(i + 1);
+      });
+    }
+    if(settled && !finishing){
+      finishing = true;
+      clearInterval(timer);
+      await generationPromise;
+      if(runId !== state.generationRunId) return;
+      if(generationError){
+        state.generationError = generationError.message || '生成失败，请稍后重试';
+        if(state.generatedPlans){
+          // A refinement failed: fall back to the intact previous result and
+          // explain the failure inline instead of losing it.
+          nav('result', {push:false});
+        } else {
+          nav('style', {push:false});
+          setTimeout(()=> showToast(`生成失败：${state.generationError}`, 4200), 0);
+        }
+        return;
+      }
+      if(fill) fill.style.width = '100%';
+      if(pctEl) pctEl.textContent = '100%';
+      stepsEls().forEach(el=>{
+        el.classList.add('done');
+        el.classList.remove('active');
+        const mark = el.querySelector('.mark');
+        if(mark) mark.innerHTML = '✓';
+      });
+      setTimeout(()=>{
+        if(runId !== state.generationRunId) return;
+        state.generationError = null;
+        nav('result', {push:false});
+      }, 450);
+    }
+  }, 250);
 }
 
 function setupCompareSlider(){

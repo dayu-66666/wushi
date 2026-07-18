@@ -1922,11 +1922,12 @@ async function refineWithFalKontext(input) {
   const instruction = String(input.refinementInstruction || "").trim().slice(0, 240);
   if (!instruction && !referenceImage) throw new Error("refinement instruction or reference image required");
 
-  // With an item reference the edit runs on a multi-image model that can see it;
-  // text-only edits stay on the proven Kontext single-image path.
+  // Both edit paths run on the same instruction-following model as the main
+  // generation: Kontext repaints similar furniture on color edits ("blue sofa"
+  // turns the armchair blue too), so text-only edits no longer default to it.
   const model = referenceImage
     ? (process.env.FAL_IMAGE_EDIT_MODEL || "openai/gpt-image-2/edit")
-    : (process.env.FAL_EDIT_MODEL || "fal-ai/flux-pro/kontext");
+    : (process.env.FAL_EDIT_MODEL || process.env.FAL_IMAGE_EDIT_MODEL || "openai/gpt-image-2/edit");
   let englishInstruction;
   let referenceItem = null;
   if (referenceImage) {
@@ -1982,7 +1983,7 @@ async function refineWithFalKontext(input) {
   }
 
   const result = mockPlans(input);
-  result.provider = referenceImage ? "fal_image_edit_local_ref" : "fal_kontext_local_edit";
+  result.provider = referenceImage ? "fal_image_edit_local_ref" : "fal_image_edit_local_edit";
   result.model = model;
   result.seed = edited.body.seed || null;
   result.timings = edited.body.timings || null;
