@@ -2032,6 +2032,30 @@ function setFinalPlan(spaceId, planIndex){
 function finalOrLatestPlan(space){
   return space.plans.find(plan => plan.final) || space.plans[space.plans.length - 1] || null;
 }
+
+/* ============ HISTORY & FAVORITES (local, per device) ============ */
+const HISTORY_KEY = 'lxj_history';
+const FAV_INSP_KEY = 'lxj_fav_insp';
+const FAV_STYLE_KEY = 'lxj_fav_style';
+function loadJSON(key, fallback){
+  try{ const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; }
+  catch{ return fallback; }
+}
+function saveJSON(key, value){
+  try{ localStorage.setItem(key, JSON.stringify(value)); }
+  catch(e){ console.warn('local storage full, skipped', key, e); }
+}
+function saveHistory(){ saveJSON(HISTORY_KEY, state.historyItems); }
+function saveFavInsp(){ saveJSON(FAV_INSP_KEY, [...state.favoriteInsp]); }
+function saveFavStyle(){ saveJSON(FAV_STYLE_KEY, [...state.favoriteResultStyles]); }
+// Rehydrate the browsing-record state saved on this device so a page reload
+// no longer wipes the user's history and favorites.
+function restoreLocalRecords(){
+  state.historyItems = loadJSON(HISTORY_KEY, []);
+  state.favoriteInsp = new Set(loadJSON(FAV_INSP_KEY, []));
+  state.favoriteResultStyles = new Set(loadJSON(FAV_STYLE_KEY, []));
+}
+
 function openAuthSheet(reason){
   state.authSheet = { reason };
   render();
@@ -2271,13 +2295,9 @@ function renderUploadSheet(){
   <div class="upload-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title">上传你的空间照片</div>
-    <button class="sheet-opt" data-action="sheet-camera">
+    <button class="sheet-opt" data-action="sheet-pick">
       <span class="opt-ic"><svg viewBox="0 0 24 24"><path d="M4 8.5h3l1.6-2.3h6.8L17 8.5h3v10H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span>
-      <span>拍摄房间<span class="opt-sub">打开相机，现场拍一张空房照片</span></span>
-    </button>
-    <button class="sheet-opt" data-action="sheet-album">
-      <span class="opt-ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M4 17l5-4.5 4 3.5 3.5-3 3.5 3.5"/></svg></span>
-      <span>从相册导入<span class="opt-sub">选择手机里已有的照片</span></span>
+      <span>拍照 / 从相册选择<span class="opt-sub">现场拍一张空房照片，或选手机里已有的照片</span></span>
     </button>
     <div class="sheet-divider">没有空房照片？用示例空间体验</div>
     <div class="sheet-samples">
@@ -2859,7 +2879,7 @@ function renderArchive(){
   }, 0);
   return `
   <div class="arch-top">
-    <button class="arch-back" data-action="back">‹</button>
+    <button class="arch-back" data-action="archive-to-profile">‹</button>
     <div class="arch-title">空间档案</div>
     <button class="arch-add" data-action="open-upload-sheet">＋</button>
   </div>
@@ -2914,7 +2934,7 @@ function renderArchiveDetail(){
   const cover = finalPlan || space.plans[space.plans.length - 1];
   return `
   <div class="d-cover" style="background-image:url('${cover ? cover.img : space.thumb}')">
-    <div class="d-topbar"><button class="arch-back" data-action="back">‹</button><span style="width:34px"></span></div>
+    <div class="d-topbar"><button class="arch-back" data-action="archive-to-list">‹</button><span style="width:34px"></span></div>
     <div class="d-name">
       <div class="n">${escapeText(space.name)}</div>
       <div class="s">建档于 ${space.createdAt} · ${space.plans.length} 个方案</div>
@@ -3200,7 +3220,9 @@ function handleAction(action, el){
       state.inspirationZoomOpen = false;
       prepareInspirationReference(item);
       showToast(`已选择「${item.name}」的风格方向`, 2000);
-      nav('camera');
+      nav('home', {push:false});
+      state.uploadSheetOpen = true;
+      render();
       break;
     }
     case 'open-upload-sheet':
@@ -3211,11 +3233,9 @@ function handleAction(action, el){
       state.uploadSheetOpen = false;
       render();
       break;
-    case 'sheet-camera':
-      state.uploadSheetOpen = false;
-      nav('camera');
-      break;
-    case 'sheet-album':
+    case 'sheet-pick':
+      // A plain file input lets the mobile browser show its own camera/album
+      // chooser — the one native menu, no fake preview page, no duplicated menu.
       state.uploadSheetOpen = false;
       render();
       document.getElementById('fileInput').click();
@@ -3276,7 +3296,9 @@ function handleAction(action, el){
       state.roomAnalysis = null;
       state.roomAnalysisPromise = null;
       state.photoQuality = null;
-      nav('camera', {push:false});
+      nav('home', {push:false});
+      state.uploadSheetOpen = true;
+      render();
       break;
     case 'upload-style-ref':
       document.getElementById('styleFileInput').click();
@@ -3414,6 +3436,7 @@ function handleAction(action, el){
           name:`我的房间 · ${plan.name}改造`,
           time:'刚刚', count:1, style:plan.id
         });
+        saveHistory();
       }
       showToast('已保存到历史');
       break;
@@ -3466,6 +3489,7 @@ function handleAction(action, el){
         state.favoriteResultStyles.add(planId);
         showToast('已收藏该方案');
       }
+      saveFavStyle();
       render();
       break;
     }
@@ -3479,9 +3503,16 @@ function handleAction(action, el){
         state.favoriteInsp.add(seed);
         showToast('已收藏该灵感');
       }
+      saveFavInsp();
       render();
       break;
     }
+    case 'archive-to-profile':
+      nav('profile', {push:false});
+      break;
+    case 'archive-to-list':
+      nav('archive', {push:false});
+      break;
     case 'toggle-final': {
       const index = Number(el.getAttribute('data-plan-index'));
       setFinalPlan(state.archiveSpaceId, index);
@@ -3715,6 +3746,7 @@ function setupCompareSlider(){
 
 /* ============ INIT ============ */
 initAuth();
+restoreLocalRecords();
 if(!state.user && !localStorage.getItem(GUEST_SEEN_KEY)){
   state.page = 'login';
 }
