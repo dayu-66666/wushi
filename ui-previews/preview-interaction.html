@@ -293,6 +293,83 @@
   .auth-sheet .text-btn{margin-top:12px;color:var(--ink-soft);font-weight:500;width:100%;}
   .profile-logout .label{color:#C98D7B;}
 
+  /* ===== SPACE ARCHIVE ===== */
+  .ftag{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:10px;padding:3px 8px;border-radius:999px;flex:none;
+    border:1px solid #3a342c;color:var(--gold);background:rgba(183,165,140,.08);
+  }
+  .ftag.soon{border-color:#4a453d;color:#cfc9c0;background:rgba(255,255,255,.04);}
+  .ftag.done{border-color:rgba(183,165,140,.6);color:var(--gold);}
+  .arch-top{display:flex;align-items:center;justify-content:space-between;padding:56px 24px 6px;}
+  .arch-back{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:15px;background:none;}
+  .arch-title{font-family:var(--font-serif);font-size:20px;font-weight:600;}
+  .arch-add{width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--cream);display:flex;align-items:center;justify-content:center;font-size:19px;border:none;}
+  .arch-sub{font-size:12px;color:var(--ink-soft);padding:2px 24px 14px;}
+  .whole-card{
+    margin:0 20px 16px;background:linear-gradient(135deg,#1a1712,#111);border:1px solid #33302a;
+    border-radius:18px;padding:16px 18px;
+  }
+  .whole-title{display:flex;align-items:center;gap:8px;font-family:var(--font-serif);font-size:17px;font-weight:600;}
+  .whole-meta{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.8;}
+  .whole-meta b{color:var(--gold);font-weight:600;}
+  .whole-tags{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap;}
+  .arch-list{padding:0 20px 110px;display:flex;flex-direction:column;gap:16px;}
+  .room-card{background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;}
+  .room-cover{position:relative;height:150px;background-size:cover;background-position:center;}
+  .room-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(0,0,0,.55));}
+  .room-name{position:absolute;left:16px;bottom:12px;z-index:2;font-family:var(--font-serif);font-size:19px;font-weight:600;color:#fff;}
+  .room-state{
+    position:absolute;right:12px;top:12px;z-index:2;font-size:11px;padding:4px 10px;border-radius:999px;
+    background:rgba(5,5,5,.72);border:1px solid rgba(183,165,140,.5);color:var(--gold);
+  }
+  .room-state.doing{color:#cfc9c0;border-color:#4a453d;}
+  .room-body{display:flex;align-items:center;gap:12px;padding:12px 16px;}
+  .arch-thumbs{display:flex;gap:6px;}
+  .arch-thumbs .t{width:42px;height:42px;border-radius:9px;background-size:cover;background-position:center;border:1px solid var(--line);position:relative;}
+  .arch-thumbs .t.orig::after{content:'原图';position:absolute;left:0;right:0;bottom:0;font-size:8px;text-align:center;background:rgba(0,0,0,.6);color:#cfc9c0;padding:1px 0;border-radius:0 0 8px 8px;}
+  .room-meta{flex:1;font-size:12px;color:var(--ink-soft);line-height:1.7;}
+  .room-meta b{color:var(--ink);font-weight:600;}
+  .room-foot{display:flex;gap:6px;padding:0 16px 14px;flex-wrap:wrap;}
+  .new-room{border:1.5px dashed #3a352e;border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;color:var(--ink-soft);background:none;width:100%;text-align:left;}
+  .new-room .plus{width:40px;height:40px;border-radius:50%;border:1px solid #3a352e;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--gold);flex:none;}
+  .new-room .txt b{display:block;color:var(--ink);font-size:14px;font-weight:600;margin-bottom:3px;}
+  .new-room .txt span{font-size:12px;}
+  .arch-empty{padding:80px 40px;text-align:center;color:var(--ink-soft);font-size:13px;line-height:2;}
+  .d-cover{position:relative;height:250px;background-size:cover;background-position:center;}
+  .d-cover::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4),transparent 35%,transparent 55%,rgba(0,0,0,.6));}
+  .d-topbar{position:absolute;top:52px;left:20px;right:20px;display:flex;justify-content:space-between;z-index:3;}
+  .d-name{position:absolute;left:20px;bottom:14px;z-index:2;}
+  .d-name .n{font-family:var(--font-serif);font-size:24px;font-weight:600;color:#fff;}
+  .d-name .s{font-size:12px;color:rgba(255,255,255,.8);margin-top:2px;}
+  .d-final-chip{position:absolute;right:16px;bottom:14px;z-index:2;font-size:11px;padding:5px 11px;border-radius:999px;background:rgba(183,165,140,.92);color:#16130f;font-weight:700;}
+  .arch-sec{padding:18px 20px 0;}
+  .arch-sec-title{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:700;margin-bottom:10px;}
+  .plan-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+  .plan-strip::-webkit-scrollbar{display:none;}
+  .plan-card{width:112px;flex:none;background:none;border:none;padding:0;text-align:left;}
+  .plan-card .img{height:80px;border-radius:12px;background-size:cover;background-position:center;border:1px solid var(--line);position:relative;}
+  .plan-card.final .img{border:1.5px solid var(--gold);}
+  .plan-card .img .f{position:absolute;top:6px;left:6px;font-size:9px;background:rgba(183,165,140,.95);color:#16130f;font-weight:700;padding:2px 6px;border-radius:999px;}
+  .plan-card .cap{font-size:11px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
+  .plan-card .cap b{color:var(--ink);}
+  .evo{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:12px;color:var(--ink-soft);line-height:1.9;}
+  .evo b{color:var(--ink);}
+  .list-row{
+    display:flex;align-items:center;gap:12px;background:var(--paper);
+    border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;width:100%;text-align:left;
+  }
+  .list-row .ic{width:36px;height:36px;border-radius:10px;background:#1B1B1B;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:16px;flex:none;}
+  .list-row .tx{flex:1;}
+  .list-row .tx b{display:block;font-size:13.5px;font-weight:600;color:var(--ink);}
+  .list-row .tx span{font-size:11.5px;color:var(--ink-soft);}
+  .list-row .chev2{color:#5d574f;}
+  .future{margin:20px 20px 110px;background:linear-gradient(135deg,#16130e,#101010);border:1px solid #33302a;border-radius:16px;padding:16px 18px;}
+  .future .ft{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;letter-spacing:1px;}
+  .future .fr{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-soft);padding:7px 0;border-bottom:1px dashed #26231e;}
+  .future .fr:last-child{border-bottom:none;}
+  .future .fr b{color:var(--ink);font-weight:600;flex:1;}
+
   /* ===== HOME ===== */
   .home-hero{
     position:relative;
@@ -1096,6 +1173,7 @@
     min-width:76px; height:28px; padding:0 10px; border-radius:999px;
     background:var(--forest); color:var(--cream);
     font-size:11.5px; font-weight:700; text-decoration:none;
+    border:none; cursor:pointer;
   }
   .buy-link.disabled{
     background:rgba(255,255,255,.08); color:var(--ink-soft);
@@ -1645,6 +1723,7 @@ const state = {
   loginBusy: false,
   loginError: '',
   otpUntil: 0,           // send-code cooldown deadline (ms timestamp)
+  archiveSpaceId: null,  // space opened in the archive detail page
   loginNext: null,       // page to return to after a login triggered mid-flow
 };
 
@@ -1891,6 +1970,68 @@ function guestGensUsed(){
 function guestGensLeft(){
   return Math.max(0, GUEST_FREE_GENS - guestGensUsed());
 }
+
+/* ============ SPACE ARCHIVE (local, per device) ============ */
+const SPACES_KEY = 'lxj_spaces';
+function loadSpaces(){
+  try{ return JSON.parse(localStorage.getItem(SPACES_KEY)) || []; }catch{ return []; }
+}
+function saveSpaces(spaces){
+  try{ localStorage.setItem(SPACES_KEY, JSON.stringify(spaces)); }
+  catch(e){ console.warn('space archive storage full, skipped', e); }
+}
+function spaceById(id){
+  return loadSpaces().find(space => space.id === id) || null;
+}
+// Cheap stable key over the photo data URL so the same room maps to one space.
+function photoKey(photo){
+  const s = String(photo || '');
+  let h = 0;
+  for(let i = 0; i < s.length; i += 97){ h = (h * 31 + s.charCodeAt(i)) >>> 0; }
+  return `${s.length}-${h}`;
+}
+function archTimeLabel(){
+  const d = new Date();
+  return `${d.getMonth() + 1}·${d.getDate()}`;
+}
+async function recordGenerationToArchive(plan, wasLocalRefinement, refinementDesc){
+  if(!state.photo || !plan || !plan.after) return;
+  const spaces = loadSpaces();
+  const key = photoKey(state.photo);
+  let space = spaces.find(item => item.key === key);
+  if(!space){
+    let thumb = state.photo;
+    try{ thumb = await resizeImageDataUrl(state.photo, 420, 0.7); }catch{ /* keep original */ }
+    space = {
+      id: 'sp' + Date.now(),
+      key,
+      name: `空间 ${spaces.length + 1}`,
+      createdAt: archTimeLabel(),
+      thumb,
+      plans: [],
+      refinements: []
+    };
+    spaces.push(space);
+  }
+  if(wasLocalRefinement && space.plans.length){
+    space.plans[space.plans.length - 1].img = plan.after;
+    space.refinements.push({ text: refinementDesc || '局部调整', time: archTimeLabel() });
+  } else {
+    space.plans.push({ img: plan.after, styleId: plan.id, styleName: plan.name, time: archTimeLabel(), final: false });
+  }
+  saveSpaces(spaces);
+}
+function setFinalPlan(spaceId, planIndex){
+  const spaces = loadSpaces();
+  const space = spaces.find(item => item.id === spaceId);
+  if(!space || !space.plans[planIndex]) return;
+  const wasFinal = space.plans[planIndex].final;
+  space.plans.forEach((plan, i) => { plan.final = !wasFinal && i === planIndex; });
+  saveSpaces(spaces);
+}
+function finalOrLatestPlan(space){
+  return space.plans.find(plan => plan.final) || space.plans[space.plans.length - 1] || null;
+}
 function openAuthSheet(reason){
   state.authSheet = { reason };
   render();
@@ -2115,6 +2256,7 @@ function render(){
     result: renderResult, shoppingList: renderShoppingList,
     inspiration: renderInspiration, inspirationDetail: renderInspirationDetail, history: renderHistory,
     profile: renderProfile, favorites: renderFavorites, login: renderLogin,
+    archive: renderArchive, archiveDetail: renderArchiveDetail,
   };
   screen.innerHTML = renderers[state.page]()
     + (state.uploadSheetOpen ? renderUploadSheet() : '')
@@ -2428,6 +2570,16 @@ function renderResult(){
 function shoppingUrl(name){
   return `https://s.taobao.com/search?q=${encodeURIComponent(name)}`;
 }
+// E-commerce search term: strip descriptive jargon, prefix the style keyword.
+const SHOP_STYLE_WORDS = {
+  cream:'奶油风', wood:'原木风', wabi:'侘寂风', midcentury:'中古风',
+  modern:'现代简约', italian:'意式极简', song:'新中式', oldmoney:'复古', custom:''
+};
+function shopSearchTerm(item, plan){
+  const cleaned = item.name.replace(/靠墙|模块|建筑感|悬浮|同款风格|相近色系|相近风格|（参考图识别）/g, '').trim();
+  const styleWord = SHOP_STYLE_WORDS[plan.id] || '';
+  return `${styleWord} ${cleaned}`.trim();
+}
 function shoppingZoneForItem(item){
   const zones = (state.generationMeta && state.generationMeta.layoutPlan && state.generationMeta.layoutPlan.zones)
     || (state.layoutPlan && state.layoutPlan.zones)
@@ -2484,11 +2636,11 @@ function renderShoppingList(){
           <span class="tag">${it.tag}</span>
         </div>
         <div class="shop-side">
-          <span class="buy-link disabled">购买链接 · 待开放</span>
+          <button class="buy-link" data-action="buy-item" data-q="${escapeText(shopSearchTerm(it, plan))}">购买链接</button>
         </div>
       </div>`).join('')}
   </div>
-  <div class="shop-note">* 单品识别与购买链接将在后续版本开放，当前清单为该风格的搭配示意。</div>
+  <div class="shop-note">* 点「购买链接」跳转淘宝同款搜索；商品仅提供相似款参考。</div>
   <div class="shop-actions">
     <button class="btn-secondary" data-action="save-list">保存搭配</button>
     <button class="btn-primary" data-action="copy-list">复制搭配清单</button>
@@ -2697,6 +2849,125 @@ function renderAuthSheet(){
   </div>`;
 }
 
+/* ============ SPACE ARCHIVE PAGES ============ */
+function renderArchive(){
+  const spaces = loadSpaces();
+  const finalCount = spaces.filter(space => space.plans.some(plan => plan.final)).length;
+  const itemCount = spaces.reduce((sum, space) => {
+    const plan = finalOrLatestPlan(space);
+    return sum + (plan ? (FURNITURE_LISTS[plan.styleId] || FURNITURE_LISTS.custom).length : 0);
+  }, 0);
+  return `
+  <div class="arch-top">
+    <button class="arch-back" data-action="back">‹</button>
+    <div class="arch-title">空间档案</div>
+    <button class="arch-add" data-action="open-upload-sheet">＋</button>
+  </div>
+  <div class="arch-sub">以房间为单位，管理你家的每一次改造</div>
+  <div class="whole-card">
+    <div class="whole-title">🏠 我的家 <span class="ftag">全屋视角 · 规划中</span></div>
+    <div class="whole-meta">${spaces.length} 个空间 · <b>${finalCount} 间已定稿</b> · 全屋家具 ${itemCount} 件</div>
+    <div class="whole-tags">
+      <span class="ftag soon">全屋购物清单</span>
+      <span class="ftag soon">全屋预算统计</span>
+      <span class="ftag">云端同步 · 下一版本</span>
+    </div>
+  </div>
+  <div class="arch-list">
+    ${spaces.length ? spaces.map(space => {
+      const cover = finalOrLatestPlan(space);
+      const hasFinal = space.plans.some(plan => plan.final);
+      return `
+    <div class="room-card" data-space="${space.id}">
+      <div class="room-cover" style="background-image:url('${cover ? cover.img : space.thumb}')">
+        <span class="room-state ${hasFinal ? '' : 'doing'}">${hasFinal ? '已定稿' : '进行中'}</span>
+        <span class="room-name">${escapeText(space.name)}</span>
+      </div>
+      <div class="room-body">
+        <div class="arch-thumbs">
+          <div class="t orig" style="background-image:url('${space.thumb}')"></div>
+          ${space.plans.slice(-2).map(plan => `<div class="t" style="background-image:url('${plan.img}')"></div>`).join('')}
+        </div>
+        <div class="room-meta"><b>${space.plans.length} 个方案</b> · ${hasFinal ? '定稿 1 版' : '未定稿'}<br/>家具清单 ${cover ? (FURNITURE_LISTS[cover.styleId] || FURNITURE_LISTS.custom).length + ' 件' : '—'}</div>
+        <div class="chev2">›</div>
+      </div>
+      <div class="room-foot">
+        <span class="ftag done">历次方案</span>
+        <span class="ftag done">家具清单</span>
+        <span class="ftag">同款购买 · 规划中</span>
+        <span class="ftag soon">分享给家人</span>
+      </div>
+    </div>`;
+    }).join('') : `
+    <div class="arch-empty">这里还没有空间档案<br/>生成一次效果图，房间会自动归档到这里</div>`}
+    <button class="new-room" data-action="open-upload-sheet">
+      <span class="plus">＋</span>
+      <span class="txt"><b>新建空间</b><span>拍一张空房照，开始新的改造</span></span>
+    </button>
+  </div>`;
+}
+
+function renderArchiveDetail(){
+  const space = spaceById(state.archiveSpaceId);
+  if(!space){ return renderArchive(); }
+  const finalPlan = space.plans.find(plan => plan.final);
+  const cover = finalPlan || space.plans[space.plans.length - 1];
+  return `
+  <div class="d-cover" style="background-image:url('${cover ? cover.img : space.thumb}')">
+    <div class="d-topbar"><button class="arch-back" data-action="back">‹</button><span style="width:34px"></span></div>
+    <div class="d-name">
+      <div class="n">${escapeText(space.name)}</div>
+      <div class="s">建档于 ${space.createdAt} · ${space.plans.length} 个方案</div>
+    </div>
+    ${finalPlan ? `<div class="d-final-chip">✓ 定稿 · ${escapeText(finalPlan.styleName)}</div>` : ''}
+  </div>
+  <div class="arch-sec">
+    <div class="arch-sec-title">历次方案 <span style="font-size:11px;color:#5d574f;font-weight:500">点方案可设为定稿</span></div>
+    <div class="plan-strip">
+      <div class="plan-card">
+        <div class="img" style="background-image:url('${space.thumb}')"></div>
+        <div class="cap"><b>原始照片</b><br/>${space.createdAt} 上传</div>
+      </div>
+      ${space.plans.map((plan, i) => `
+      <button class="plan-card ${plan.final ? 'final' : ''}" data-action="toggle-final" data-plan-index="${i}">
+        <div class="img" style="background-image:url('${plan.img}')">${plan.final ? '<span class="f">定稿</span>' : ''}</div>
+        <div class="cap"><b>方案 ${i + 1}</b> · ${escapeText(plan.styleName)}</div>
+      </button>`).join('')}
+    </div>
+  </div>
+  ${space.refinements.length ? `
+  <div class="arch-sec">
+    <div class="arch-sec-title">调整记录</div>
+    <div class="evo">${space.refinements.map(r => `${r.time} <b>${escapeText(r.text)}</b>`).join('<br/>')}</div>
+  </div>` : ''}
+  <div class="arch-sec" style="margin-top:18px">
+    <button class="list-row" data-action="archive-shopping">
+      <span class="ic">🛋</span>
+      <span class="tx"><b>家具清单${cover ? ' · ' + (FURNITURE_LISTS[cover.styleId] || FURNITURE_LISTS.custom).length + ' 件' : ''}</b><span>来自${finalPlan ? '定稿' : '最新'}方案 · 含购买链接</span></span>
+      <span class="ftag">同款购买 · 规划中</span>
+      <span class="chev2">›</span>
+    </button>
+    <button class="list-row" data-action="archive-share">
+      <span class="ic">📤</span>
+      <span class="tx"><b>分享这个房间</b><span>发给家人或装修公司一起拍板</span></span>
+      <span class="ftag soon">未来版本</span>
+      <span class="chev2">›</span>
+    </button>
+    <button class="list-row" data-action="hard-toast">
+      <span class="ic">🔨</span>
+      <span class="tx"><b>硬装模式</b><span>同一房间的硬装改造方案</span></span>
+      <span class="ftag soon">未来版本</span>
+      <span class="chev2">›</span>
+    </button>
+  </div>
+  <div class="future">
+    <div class="ft">ROADMAP · 空间档案上的演进</div>
+    <div class="fr"><b>云端同步，换手机不丢</b><span class="ftag">下一版本</span></div>
+    <div class="fr"><b>全屋购物清单聚合 + 同款购买</b><span class="ftag soon">规划中</span></div>
+    <div class="fr"><b>AI 学习你的定稿偏好，越用越懂你</b><span class="ftag soon">未来版本</span></div>
+  </div>`;
+}
+
 /* ============ PROFILE ============ */
 function renderProfile(){
   const email = state.user ? state.user.email : null;
@@ -2719,9 +2990,9 @@ function renderProfile(){
         <div class="text"><div class="label">收藏风格</div><div class="count">${favoriteStyleEntries().length} 个风格</div></div>
       </div><span class="chevron">${ICONS.chevron}</span>
     </div>
-    <div class="profile-row" data-action="archive-toast">
+    <div class="profile-row" data-nav="archive">
       <div class="left"><div class="icon">${ICONS.archive}</div>
-        <div class="text"><div class="label">空间档案</div></div>
+        <div class="text"><div class="label">空间档案</div><div class="count">${loadSpaces().length} 个空间</div></div>
       </div><span class="chevron">${ICONS.chevron}</span>
     </div>
     <div class="profile-row" data-action="hard-toast">
@@ -2834,6 +3105,14 @@ function attachHandlers(){
       }, {passive:false});
       stage.addEventListener('touchend', ()=>{ pinchStartDistance = 0; }, {passive:true});
     }
+  }
+  if(state.page === 'archive'){
+    document.querySelectorAll('[data-space]').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        state.archiveSpaceId = el.getAttribute('data-space');
+        nav('archiveDetail');
+      });
+    });
   }
   if(state.page === 'history'){
     document.querySelectorAll('[data-histitem]').forEach(el=>{
@@ -3149,6 +3428,21 @@ function handleAction(action, el){
       if(!requireLogin('save')) return;
       showToast('已保存这套搭配');
       break;
+    case 'buy-item': {
+      const q = el.getAttribute('data-q') || '';
+      if(!q) return;
+      if(/MicroMessenger/i.test(navigator.userAgent)){
+        // WeChat's browser cannot open the Taobao app or site reliably; hand
+        // the user a ready-to-paste search term instead.
+        const write = navigator.clipboard && navigator.clipboard.writeText
+          ? navigator.clipboard.writeText(q) : Promise.reject();
+        write.then(()=> showToast('搜索词已复制，打开淘宝粘贴即可找同款', 3600))
+          .catch(()=> showToast(`请打开淘宝搜索：${q}`, 4200));
+      } else {
+        window.open(shoppingUrl(q), '_blank');
+      }
+      break;
+    }
     case 'copy-list': {
       const plan = planFor('A');
       if(!plan){ showToast('还没有可复制的搭配清单'); return; }
@@ -3188,8 +3482,26 @@ function handleAction(action, el){
       render();
       break;
     }
-    case 'archive-toast':
-      showToast('空间档案功能开发中');
+    case 'toggle-final': {
+      const index = Number(el.getAttribute('data-plan-index'));
+      setFinalPlan(state.archiveSpaceId, index);
+      const nowFinal = (spaceById(state.archiveSpaceId)?.plans[index] || {}).final;
+      showToast(nowFinal ? '已设为定稿方案' : '已取消定稿');
+      render();
+      break;
+    }
+    case 'archive-shopping': {
+      const space = spaceById(state.archiveSpaceId);
+      const plan = space ? finalOrLatestPlan(space) : null;
+      if(!plan){ showToast('这个空间还没有方案'); return; }
+      state.selectedStyle = plan.styleId;
+      state.generatedPlans = { A: { id: plan.styleId, name: plan.styleName, desc: '', after: plan.img } };
+      state.generationMeta = null;
+      nav('shoppingList');
+      break;
+    }
+    case 'archive-share':
+      showToast('分享功能开发中，敬请期待');
       break;
     case 'hard-toast':
       showToast('硬装模式即将开放，敬请期待');
@@ -3271,6 +3583,9 @@ function runGeneratingSequence(){
     if(!state.user){
       localStorage.setItem(GUEST_GENS_KEY, String(guestGensUsed() + 1));
     }
+    const wasLocalRefinement = Boolean(state.refinementBaseImage && (state.pendingRefinement || state.refinementRefImage));
+    const refinementDesc = state.pendingRefinement || (state.refinementRefImage ? '单品参考图替换' : '');
+    recordGenerationToArchive(plans.A, wasLocalRefinement, refinementDesc);
     state.generationMeta = {
       provider: data.provider || 'unknown',
       model: data.model || '',
