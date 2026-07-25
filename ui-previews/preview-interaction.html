@@ -37,6 +37,7 @@
     align-items:flex-start;
     justify-content:center;
     min-height:100vh;
+    min-height:100dvh;
   }
   .device-wrap{
     padding:28px 0;
@@ -59,6 +60,7 @@
     .phone{
       width:100vw;
       height:100vh;
+      height:100dvh;
       border-radius:0;
       border:none;
     }
@@ -254,16 +256,16 @@
     background:radial-gradient(120% 60% at 50% -10%, #14120e 0%, #050505 60%);
   }
   .login-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-  .lg-mark{margin-bottom:18px;}
-  .lg-name{font-family:var(--font-serif);font-size:36px;font-weight:600;letter-spacing:6px;text-indent:6px;margin:0 0 10px;}
-  .lg-latin{font-size:10px;letter-spacing:6px;color:var(--gold);margin:0 0 16px;text-indent:6px;}
+  .lg-mark{margin-bottom:14px;}
+  .lg-name{font-family:var(--font-serif);font-size:32px;font-weight:600;letter-spacing:6px;text-indent:6px;margin:0 0 8px;}
+  .lg-latin{font-size:10px;letter-spacing:6px;color:var(--gold);margin:0 0 14px;text-indent:6px;}
   .lg-slogan{font-size:13px;color:var(--ink-soft);margin:0;}
-  .login-form{display:flex;flex-direction:column;gap:13px;padding-bottom:30px;}
+  .login-form{display:flex;flex-direction:column;gap:12px;padding-bottom:22px;}
   .auth-field{
     display:flex;align-items:center;gap:10px;background:var(--paper);
     border:1px solid var(--line);border-radius:14px;padding:15px 16px;
   }
-  .auth-field input{background:none;border:none;outline:none;color:var(--ink);font-size:15px;flex:1;font-family:var(--font-sans);}
+  .auth-field input{background:none;border:none;outline:none;color:var(--ink);font-size:15px;flex:1;min-width:0;font-family:var(--font-sans);}
   .auth-field input::placeholder{color:#5d574f;}
   .auth-field .send{font-size:13px;color:var(--gold);font-weight:600;flex:none;cursor:pointer;user-select:none;}
   .auth-field .send.disabled{color:#5d574f;cursor:default;}
