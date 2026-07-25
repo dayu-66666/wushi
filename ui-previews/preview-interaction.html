@@ -1488,6 +1488,34 @@ const MODEL_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api
 const ROOM_ANALYZE_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/analyze-room' : '/api/analyze-room';
 const STYLE_ANALYZE_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/analyze-style' : '/api/analyze-style';
 const AUTH_API_BASE = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/auth' : '/api/auth';
+const TRACK_API_URL = location.protocol === 'file:' ? 'http://127.0.0.1:4317/api/track' : '/api/track';
+// Anonymous per-device id so analytics counts guests too, not just登录用户.
+const TRACK_SESSION_KEY = 'lxj_sid';
+function trackSessionId(){
+  let sid = null;
+  try{ sid = localStorage.getItem(TRACK_SESSION_KEY); }catch{ /* private mode */ }
+  if(!sid){
+    sid = 's_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    try{ localStorage.setItem(TRACK_SESSION_KEY, sid); }catch{ /* ignore */ }
+  }
+  return sid;
+}
+// Fire-and-forget event logging; never blocks or breaks the UI.
+function track(event, props){
+  try{
+    fetch(TRACK_API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        event,
+        sessionId: trackSessionId(),
+        email: (state.user && state.user.email) || null,
+        props: props || null
+      }),
+      keepalive:true
+    }).catch(()=>{});
+  }catch{ /* analytics must never throw */ }
+}
 const STYLE_IMAGE_COUNTS = {
   cream: 5,
   wood: 5,
@@ -2070,6 +2098,7 @@ function closeAuthSheet(){
 function requireGenerationCredit(){
   if(state.user) return true;
   if(guestGensLeft() > 0) return true;
+  track('guest_quota_hit', { action: 'generate' });
   openAuthSheet('quota');
   return false;
 }
@@ -3355,9 +3384,10 @@ function handleAction(action, el){
       state.loginBusy = true;
       state.loginError = '';
       el.classList.add('disabled'); el.textContent = '登录中…';
-      authVerifyOtp(email, code).then(()=>{
+      authVerifyOtp(email, code).then((data)=>{
         state.loginBusy = false;
         localStorage.setItem(GUEST_SEEN_KEY, '1');
+        track('login_success', { isNew: Boolean(data && data.isNew) });
         const next = state.loginNext || 'home';
         state.loginNext = null;
         nav(next, {push:false});
@@ -3390,6 +3420,7 @@ function handleAction(action, el){
     case 'generate':
       if(!state.selectedStyle){ showToast('请先选择一个家具风格'); return; }
       if(!requireGenerationCredit()) return;
+      track('generate_click', { styleId: state.selectedStyle, mode: state.customStyle ? 'reference' : 'preset' });
       state.pendingRefinement = '';
       state.refinementText = '';
       state.refinementBaseImage = null;
@@ -3456,6 +3487,7 @@ function handleAction(action, el){
     case 'buy-item': {
       const q = el.getAttribute('data-q') || '';
       if(!q) return;
+      track('buy_click', { q: q.slice(0, 40) });
       if(/MicroMessenger/i.test(navigator.userAgent)){
         // WeChat's browser cannot open the Taobao app or site reliably; hand
         // the user a ready-to-paste search term instead.
@@ -3600,9 +3632,12 @@ document.getElementById('styleFileInput').addEventListener('change', function(e)
 
 function runGeneratingSequence(){
   const runId = state.generationRunId;
+  const startedAtMs = Date.now();
+  const isLocalEdit = Boolean(state.refinementBaseImage && (state.pendingRefinement || state.refinementRefImage));
   let generationError = null;
   const generationPromise = requestModelGeneration().then((data)=>{
     if(runId !== state.generationRunId) return;
+    track('generate_result', { success:'true', kind: isLocalEdit ? 'local_edit' : 'full', styleId: state.selectedStyle, duration: Date.now() - startedAtMs });
     const plans = {};
     (data.plans || []).forEach(plan => {
       plans[plan.tab] = {
@@ -3634,6 +3669,7 @@ function runGeneratingSequence(){
     state.refinementRefImage = null;
   }).catch((err)=>{
     generationError = err;
+    track('generate_result', { success:'false', kind: isLocalEdit ? 'local_edit' : 'full', styleId: state.selectedStyle, duration: Date.now() - startedAtMs, reason: (err && err.message || '').slice(0, 60) });
   });
   let settled = false;
   generationPromise.finally(()=>{ settled = true; });
@@ -3753,6 +3789,7 @@ if(!state.user && !localStorage.getItem(GUEST_SEEN_KEY)){
   state.page = 'login';
 }
 render();
+track('page_view', { entry: state.page, loggedIn: Boolean(state.user) });
 </script>
 </body>
 </html>

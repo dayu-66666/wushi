@@ -2126,6 +2126,109 @@ async function supabaseAuthRequest(pathname, body) {
   return { ok: true, status: 200, data };
 }
 
+async function recordEvent(row) {
+  const base = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!base || !key) return;
+  try {
+    await fetch(`${base}/rest/v1/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: key, Authorization: `Bearer ${key}`, Prefer: "return=minimal" },
+      body: JSON.stringify(row),
+      signal: AbortSignal.timeout(8000)
+    });
+  } catch (error) {
+    // Analytics must never break or slow the product.
+    console.error("[gateway] event write failed:", error.message);
+  }
+}
+
+function statNum(n) {
+  return Number(n || 0).toLocaleString("en-US");
+}
+
+async function handleStats(req, res, url) {
+  const pass = process.env.STATS_PASSWORD || "lixiang2026";
+  if (url.searchParams.get("key") !== pass) {
+    return html(res, 200, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>理想家 · 数据看板</title>
+<style>body{margin:0;height:100vh;display:flex;align-items:center;justify-content:center;background:#0d0c0a;font-family:-apple-system,"PingFang SC",sans-serif}
+form{display:flex;flex-direction:column;gap:14px;width:280px;text-align:center;color:#f4f1ea}
+h1{font-size:20px;font-weight:600;margin:0 0 6px}p{color:#9a938b;font-size:13px;margin:0 0 10px}
+input{padding:13px 15px;border-radius:12px;border:1px solid #292622;background:#151310;color:#f4f1ea;font-size:15px}
+button{padding:13px;border-radius:999px;border:none;background:#f4f1ea;color:#111;font-weight:700;font-size:15px}</style>
+<form method="get"><h1>理想家 · 数据看板</h1><p>请输入访问口令</p><input name="key" type="password" placeholder="口令" autofocus><button>进入</button></form>`);
+  }
+  const base = (process.env.SUPABASE_URL || "").replace(/\/$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  let s = {};
+  try {
+    const r = await fetch(`${base}/rest/v1/rpc/stats_summary`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: key, Authorization: `Bearer ${key}` },
+      body: "{}",
+      signal: AbortSignal.timeout(12000)
+    });
+    s = await r.json();
+  } catch (error) {
+    return html(res, 200, `<h1>数据读取失败</h1><p>${error.message}</p>`);
+  }
+  const convGuest = s.generate_clicks ? Math.round((s.logins / s.generate_clicks) * 100) : 0;
+  const okRate = s.generations_total ? Math.round((s.generations_ok / s.generations_total) * 100) : 0;
+  const daily = Array.isArray(s.daily) ? s.daily : [];
+  const maxV = Math.max(1, ...daily.map(d => d.visitors || 0));
+  const styles = Array.isArray(s.top_styles) ? s.top_styles : [];
+  const STYLE_LABELS = { cream: "奶油风", wood: "原木风", wabi: "侘寂风", midcentury: "中古风", modern: "现代简约", italian: "意式极简", song: "新中式", oldmoney: "复古", custom: "自定义参考" };
+  const card = (label, value, sub) => `<div class="card"><div class="v">${value}</div><div class="l">${label}</div>${sub ? `<div class="s">${sub}</div>` : ""}</div>`;
+  return html(res, 200, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>理想家 · 数据看板</title>
+<style>
+:root{--gold:#B7A58C}
+*{box-sizing:border-box}
+body{margin:0;background:#0d0c0a;color:#f4f1ea;font-family:-apple-system,"PingFang SC",sans-serif;padding:20px 16px 60px}
+.wrap{max-width:720px;margin:0 auto}
+h1{font-size:20px;margin:0 0 2px}.sub{color:#6b6459;font-size:12px;margin:0 0 20px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px}
+.card{background:#151310;border:1px solid #23201b;border-radius:14px;padding:14px}
+.card .v{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.card .l{font-size:12px;color:#9a938b;margin-top:3px}
+.card .s{font-size:11px;color:var(--gold);margin-top:4px}
+.sec{font-size:13px;font-weight:700;color:var(--gold);margin:24px 0 10px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:120px;background:#111;border:1px solid #23201b;border-radius:14px;padding:14px}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;height:100%}
+.bar i{width:100%;background:linear-gradient(180deg,#B7A58C,#6f6350);border-radius:4px 4px 0 0;min-height:2px}
+.bar span{font-size:9px;color:#6b6459}
+.row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #1b1813;font-size:13px}
+.row b{width:70px;color:#cfc9c0}.row .track{flex:1;height:8px;background:#1b1813;border-radius:6px;overflow:hidden}
+.row .fill{height:100%;background:var(--gold)}.row .n{width:40px;text-align:right;color:#9a938b}
+.empty{color:#6b6459;font-size:13px;padding:16px;text-align:center;background:#111;border:1px solid #23201b;border-radius:14px}
+</style>
+<div class="wrap">
+<h1>理想家 · 数据看板</h1>
+<div class="sub">数据自埋点上线起累计 · 已排除测试账号 · 刷新即最新</div>
+<div class="grid">
+  ${card("注册用户", statNum(s.registrations))}
+  ${card("累计访问人数", statNum(s.visitors_total), `今日 ${statNum(s.visitors_today)}`)}
+  ${card("近 7 日访问", statNum(s.visitors_7d))}
+  ${card("累计生成", statNum(s.generations_total), `今日 ${statNum(s.generations_today)}`)}
+  ${card("生成成功率", okRate + "%")}
+  ${card("点购买链接", statNum(s.buy_clicks))}
+</div>
+<div class="sec">转化漏斗</div>
+<div>
+  <div class="row"><b>访问</b><div class="track"><div class="fill" style="width:100%"></div></div><span class="n">${statNum(s.visitors_total)}</span></div>
+  <div class="row"><b>点生成</b><div class="track"><div class="fill" style="width:${s.visitors_total ? Math.round((s.generate_clicks / s.visitors_total) * 100) : 0}%"></div></div><span class="n">${statNum(s.generate_clicks)}</span></div>
+  <div class="row"><b>撞免费墙</b><div class="track"><div class="fill" style="width:${s.visitors_total ? Math.round((s.quota_hits / s.visitors_total) * 100) : 0}%"></div></div><span class="n">${statNum(s.quota_hits)}</span></div>
+  <div class="row"><b>登录注册</b><div class="track"><div class="fill" style="width:${s.visitors_total ? Math.round((s.logins / s.visitors_total) * 100) : 0}%"></div></div><span class="n">${statNum(s.logins)}</span></div>
+</div>
+<div class="sub" style="margin-top:8px">点生成的人里约 ${convGuest}% 最终登录注册</div>
+<div class="sec">近 14 天访问</div>
+${daily.length ? `<div class="bars">${daily.map(d => `<div class="bar"><i style="height:${Math.round(((d.visitors || 0) / maxV) * 100)}%"></i><span>${String(d.day).slice(5)}</span></div>`).join("")}</div>` : `<div class="empty">还没有访问数据，用户开始使用后这里会出现折线</div>`}
+<div class="sec">热门风格（按点生成次数）</div>
+${styles.length ? styles.map(x => `<div class="row"><b>${STYLE_LABELS[x.style] || x.style}</b><div class="track"><div class="fill" style="width:${Math.round((x.n / (styles[0].n || 1)) * 100)}%"></div></div><span class="n">${statNum(x.n)}</span></div>`).join("") : `<div class="empty">还没有生成数据</div>`}
+</div>`);
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || "127.0.0.1"}`);
@@ -2285,6 +2388,25 @@ const server = http.createServer(async (req, res) => {
         expiresAt: data.expires_at,
         email: data.user?.email || null
       });
+    }
+    if (req.method === "POST" && url.pathname === "/api/track") {
+      // Fire-and-forget analytics: accept the event, write it to Supabase with
+      // the service_role key (RLS keeps the anon key out), never block the user.
+      const input = await readBody(req).catch(() => ({}));
+      const event = String(input.event || "").trim().slice(0, 60);
+      if (!event) return json(res, 200, { ok: true });
+      const row = {
+        session_id: String(input.sessionId || "").slice(0, 80) || null,
+        event,
+        props: input.props && typeof input.props === "object" ? input.props : null,
+        email: input.email ? String(input.email).slice(0, 120) : null,
+        ua: String(req.headers["user-agent"] || "").slice(0, 300)
+      };
+      recordEvent(row);
+      return json(res, 200, { ok: true });
+    }
+    if (req.method === "GET" && url.pathname === "/api/stats") {
+      return await handleStats(req, res, url);
     }
     return json(res, 404, { error: "not found" });
   } catch (err) {
