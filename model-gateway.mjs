@@ -95,7 +95,7 @@ const LAYOUT_RULES = [
   "Design the room like a professional interior designer, not a random collage.",
   "Use one coherent living-room furniture group plus restrained soft furnishings.",
   "Furniture set: exactly one main sofa or sectional, exactly one accent lounge chair, one coffee table centered in front of the sofa, one rug anchoring the seating group, one low TV console or media cabinet with a television above it when a usable wall exists, one floor lamp, sofa cushions, an intentionally composed art treatment behind the sofa, a floral arrangement on the coffee table, and books on the media console.",
-  "Place the main sofa directly against or very close to the longest usable wall, parallel to the wall plane, with its back visually anchored to the wall.",
+  "If a wall is clad as a TV feature wall (电视背景墙: natural stone or marble slab, full-height wood slat or grille, a shaped or textured accent panel, or a built-in TV niche), keep the television and media console on that feature wall and place the main sofa against the wall directly opposite it, facing the feature wall. A plainly painted or wallpapered wall, a window, or a balcony wall is not a feature wall. When the room has no such feature wall, place the main sofa against the longest usable wall. The sofa sits parallel to its wall with its back anchored to the wall.",
   "Place the accent chair at a natural 35-to-45-degree angle beside or diagonally opposite the sofa, oriented toward the coffee table and conversation center rather than squarely facing the sofa; it must never sit randomly in the middle or block circulation.",
   "Furniture must be rich enough to look like a complete styled living room, but not cluttered.",
   "Do not leave the room with only a sofa and a rug.",
@@ -116,7 +116,7 @@ const LIVING_ROOM_RECIPE = [
   { id: "rug", label: "area rug", requirement: "one generously sized area rug anchoring the entire seating group" },
   { id: "coffee_table", label: "coffee table", requirement: "one coffee table centered on the rug at a usable distance from the sofa" },
   { id: "floral_arrangement", label: "floral arrangement", requirement: "one restrained floral or branch arrangement in a vessel on the coffee table" },
-  { id: "media_console", label: "media console", requirement: "one low media console on the wall opposite the sofa when a safe wall exists" },
+  { id: "media_console", label: "media console", requirement: "one low media console on the TV feature wall when the room has one, otherwise on the wall opposite the sofa, when a safe wall exists" },
   { id: "television", label: "television", requirement: "one correctly scaled television wall-mounted directly above the media console, or standing securely on it when wall mounting is unsuitable" },
   { id: "books_on_console", label: "books on media console", requirement: "a small intentional stack of books or design magazines on the media console" },
   { id: "floor_lamp", label: "floor lamp", requirement: "one style-appropriate floor lamp beside the sofa or accent chair" },
@@ -866,9 +866,9 @@ async function analyzeRoomWithFalVision(roomImage) {
     "Do not infer a different room. Identify openings and circulation before furniture placement.",
     "Schema:",
     '{"roomType":"living_room","cameraView":"...","analysisSummary":"...","zones":{"sofa":{"x":0,"y":0,"w":0,"h":0,"role":"..."},"rugTable":{"x":0,"y":0,"w":0,"h":0,"role":"..."},"mediaConsole":{"x":0,"y":0,"w":0,"h":0,"role":"..."},"wallArt":{"x":0,"y":0,"w":0,"h":0,"role":"..."},"decor":{"x":0,"y":0,"w":0,"h":0,"role":"..."}},"forbiddenZones":{"opening1":{"x":0,"y":0,"w":0,"h":0,"role":"door/window/balcony/circulation"}},"placementRules":["..."]}',
-    "The sofa box must cover one realistic sofa footprint and nearby wall area, placed against the best usable wall, never floating in the center.",
+    "If the room has a TV feature wall (电视背景墙: stone or marble slab, full-height wood slat or grille, a shaped accent panel, or a built-in TV niche; a plain painted wall or window does not count), place the television and media console against it and put the sofa against the wall directly opposite; otherwise place the sofa against the best usable wall. The sofa box must cover one realistic sofa footprint and nearby wall area, never floating in the center.",
     "The rugTable box must lie on visible floor in front of the sofa.",
-    "A mediaConsole box, when safe, must be a shallow region attached to the visible wall opposite the sofa. Never place the media console in the center of the floor, on the rug, or in front of the balcony; include enough wall immediately above it for a television.",
+    "A mediaConsole box, when safe, must be a shallow region attached to the TV feature wall if one exists, otherwise the visible wall opposite the sofa. Never place the media console in the center of the floor, on the rug, or in front of the balcony; include enough wall immediately above it for a television.",
     "Do not create furniture zones inside doors, windows, balcony openings, hallways, or the main walking path.",
     "Prefer fewer safe zones over speculative zones. Do not include curtains or ceiling lighting in this first-pass plan."
   ].join(" ");
@@ -909,11 +909,11 @@ async function analyzeRoomWithOpenRouterVision(roomImage) {
     "forbiddenZones must be an array of {id,x,y,w,h,role} covering every visible door, doorway, window, balcony opening and essential circulation strip.",
     "Opening boxes must tightly cover only the visible physical opening. Do not include reflections on the floor, the floor in front of an opening, or nearby usable wall area inside a door/window/balcony box.",
     "A circulation strip describes floor that should stay walkable, but its image-space box must not overlap any furniture zone. If the perspective makes a non-overlapping rectangle impossible, omit that circulation box and express the rule in placementRules instead.",
-    "The sofa zone must be against the longest genuinely usable wall and must include the floor contact area. Never place a sofa in the center or in front of an opening.",
+    "First check for a TV feature wall (电视背景墙): a wall clad in natural stone or marble slab, full-height wood slat or grille, a shaped or textured accent panel, or a built-in TV niche. A plainly painted or wallpapered wall, a window, or a balcony wall is NOT a feature wall. If a usable feature wall exists, put the television and mediaConsole against it and put the sofa against the wall directly opposite it, facing the feature wall. Only when no wall has such a decorative feature finish, place the sofa against the longest genuinely usable wall. The sofa zone must include the floor contact area and must never sit in the center or in front of an opening.",
     "The wallArt zone should use the safe wall area directly behind and visually centered over the sofa. Only choose another usable wall when the sofa wall is physically interrupted or unsafe. Its role must allow the art composition to adapt to the wall proportions rather than force one picture.",
     "The accentChair zone must hold exactly one compact lounge chair beside or diagonally opposite the sofa, set at a natural 35-to-45-degree angle toward the coffee table and conversation center rather than squarely facing the sofa. It must not overlap the sofa, sit in the central path, or block an opening.",
     "The rugTable zone must be on the visible floor directly in front of the sofa. Keep one continuous walking path from the camera/entrance to the far opening.",
-    "When mediaConsole is safe, attach its shallow box to the visible wall opposite the sofa and include enough wall immediately above it for one television. Never place its box in the middle of the floor, on the rugTable zone, or in front of an opening.",
+    "When mediaConsole is safe, attach its shallow box to the TV feature wall if one was identified, otherwise to the visible wall opposite the sofa, and include enough wall immediately above it for one television. Never place its box in the middle of the floor, on the rugTable zone, or in front of an opening.",
     "Do not plan curtains or ceiling-light edits in this pass. Do not copy composition from any style reference.",
     'Example shape only: {"roomType":"living_room","cameraView":"entrance toward balcony","analysisSummary":"...","zones":{"sofa":{"x":0.58,"y":0.53,"w":0.32,"h":0.27,"role":"..."},"accentChair":{"x":0.20,"y":0.62,"w":0.16,"h":0.20,"role":"..."},"rugTable":{"x":0.30,"y":0.66,"w":0.38,"h":0.22,"role":"..."},"mediaConsole":null,"wallArt":null,"decor":null},"forbiddenZones":[{"id":"balcony","x":0.34,"y":0.18,"w":0.35,"h":0.37,"role":"keep open"}],"placementRules":["..."]}'
   ].join(" ");
