@@ -1241,9 +1241,18 @@ function makeKontextPrompt(input, styleId) {
     !scene.floorLamp?.present ? "a floor lamp" : "",
     "flowers on the coffee table and books on the console"
   ].filter(Boolean).join(", ");
+  // Turn the planned zone x-positions into an explicit LEFT/RIGHT directive:
+  // the image model ignores the coordinate boxes and follows plain wall words.
+  const sofaCx = zones.sofa ? zones.sofa.x + zones.sofa.w / 2 : null;
+  const tvCx = zones.mediaConsole ? zones.mediaConsole.x + zones.mediaConsole.w / 2
+    : (sofaCx != null ? 1 - sofaCx : null);
+  const sideDirective = (sofaCx != null && tvCx != null && Math.abs(sofaCx - tvCx) > 0.15)
+    ? `The main sofa must sit against the ${sofaCx < 0.5 ? "LEFT" : "RIGHT"} wall; the television and its low media console must be on the ${tvCx < 0.5 ? "LEFT" : "RIGHT"} wall opposite the sofa. Keep this exact left-right arrangement.`
+    : "";
   return [
     input.directVisualReference ? "IMAGE 1 is the immutable room photograph; IMAGE 2 is only a furniture and style reference — never copy its room, camera or layout." : "",
     "Furnish this exact empty room photograph into one complete, professionally styled living room. Do not create a different room.",
+    sideDirective,
     input.refinementInstruction ? `Top-priority user request: ${clampWords(input.refinementInstruction, 30)}.` : "",
     referenceLines.length
       ? `Recreate these reference pieces faithfully — same colors, materials and silhouettes, rescaled to this room: ${referenceLines.join(". ")}.`
