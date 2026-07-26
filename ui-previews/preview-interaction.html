@@ -2199,8 +2199,24 @@ async function prepareInspirationReference(item){
 // Instructions that ask for a whole new scheme regenerate the full set from the
 // original photo; anything else edits the current approved result in place.
 const GLOBAL_REFINEMENT_PATTERN = /整套|全套|整体|全部|换一版|再来一版|换个方案|换一套|重新设计|重新布局|重来|换.{0,2}风格/;
+// Moving the sofa to a side changes the whole layout, so it is a full
+// regeneration (not a local edit) and carries a forced side to the backend.
+function detectSofaSide(text){
+  if(!text || !/沙发/.test(text)) return null;
+  const wantsLeft = /左/.test(text);
+  const wantsRight = /右/.test(text);
+  if(wantsRight && !wantsLeft) return 'right';
+  if(wantsLeft && !wantsRight) return 'left';
+  // "换到对面 / 另一边 / 换个方向" flips from the current layout when known.
+  if(/对面|另一边|另一侧|换边|换个?方向|反过来/.test(text)){
+    const zones = state.generationMeta && state.generationMeta.layoutPlan && state.generationMeta.layoutPlan.zones;
+    const sofa = zones && zones.sofa;
+    if(sofa) return (sofa.x + sofa.w / 2) < 0.5 ? 'right' : 'left';
+  }
+  return null;
+}
 function isGlobalRefinement(text){
-  return !text || GLOBAL_REFINEMENT_PATTERN.test(text);
+  return !text || Boolean(detectSofaSide(text)) || GLOBAL_REFINEMENT_PATTERN.test(text);
 }
 
 async function requestModelGeneration(){
@@ -2238,7 +2254,8 @@ async function requestModelGeneration(){
     refinementInstruction: state.pendingRefinement || null,
     refinementReferenceImage: localRefinement ? (state.refinementRefImage || null) : null,
     baseResultImage: localRefinement ? state.refinementBaseImage : null,
-    generationMode: localRefinement ? 'local_refinement' : 'layout_guided_edit'
+    generationMode: localRefinement ? 'local_refinement' : 'layout_guided_edit',
+    sofaSideOverride: localRefinement ? null : detectSofaSide(state.pendingRefinement)
   };
   try{
     const res = await fetch(MODEL_API_URL, {

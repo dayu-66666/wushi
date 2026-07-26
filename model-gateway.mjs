@@ -886,9 +886,13 @@ async function analyzeRoomWithFalVision(roomImage) {
   return value;
 }
 
-async function analyzeRoomWithOpenRouterVision(roomImage) {
-  const key = `openrouter:${imageCacheKey(roomImage)}`;
+async function analyzeRoomWithOpenRouterVision(roomImage, sofaSide = null) {
+  const forcedSide = sofaSide === "left" || sofaSide === "right" ? sofaSide : null;
+  const key = `openrouter:${imageCacheKey(roomImage)}${forcedSide ? ":sofa-" + forcedSide : ""}`;
   if (ROOM_ANALYSIS_CACHE.has(key)) return ROOM_ANALYSIS_CACHE.get(key);
+  const sideOverride = forcedSide
+    ? `USER LAYOUT OVERRIDE (highest priority): The user requires the main sofa on the ${forcedSide.toUpperCase()} side of the room, anchored to the ${forcedSide} wall, and the television with its media console on the ${forcedSide === "left" ? "RIGHT" : "LEFT"} wall. Place the sofa and TV on exactly these sides regardless of wall finish, feature wall, or which wall is longest, while still avoiding doors, windows and balcony openings and keeping the walkway clear. The sofa zone center x must be ${forcedSide === "left" ? "below 0.4" : "above 0.6"}.`
+    : null;
   const prompt = [
     "You are a conservative photo-quality inspector and spatial planner for photorealistic furniture staging.",
     "Analyze the exact uploaded room photograph. Do not imagine a different room.",
@@ -915,8 +919,9 @@ async function analyzeRoomWithOpenRouterVision(roomImage) {
     "The rugTable zone must be on the visible floor directly in front of the sofa. Keep one continuous walking path from the camera/entrance to the far opening.",
     "When mediaConsole is safe, attach its shallow box to the TV feature wall if one was identified, otherwise to the visible wall opposite the sofa, and include enough wall immediately above it for one television. Never place its box in the middle of the floor, on the rugTable zone, or in front of an opening.",
     "Do not plan curtains or ceiling-light edits in this pass. Do not copy composition from any style reference.",
-    'Example shape only: {"roomType":"living_room","cameraView":"entrance toward balcony","analysisSummary":"...","zones":{"sofa":{"x":0.58,"y":0.53,"w":0.32,"h":0.27,"role":"..."},"accentChair":{"x":0.20,"y":0.62,"w":0.16,"h":0.20,"role":"..."},"rugTable":{"x":0.30,"y":0.66,"w":0.38,"h":0.22,"role":"..."},"mediaConsole":null,"wallArt":null,"decor":null},"forbiddenZones":[{"id":"balcony","x":0.34,"y":0.18,"w":0.35,"h":0.37,"role":"keep open"}],"placementRules":["..."]}'
-  ].join(" ");
+    'Example shape only: {"roomType":"living_room","cameraView":"entrance toward balcony","analysisSummary":"...","zones":{"sofa":{"x":0.58,"y":0.53,"w":0.32,"h":0.27,"role":"..."},"accentChair":{"x":0.20,"y":0.62,"w":0.16,"h":0.20,"role":"..."},"rugTable":{"x":0.30,"y":0.66,"w":0.38,"h":0.22,"role":"..."},"mediaConsole":null,"wallArt":null,"decor":null},"forbiddenZones":[{"id":"balcony","x":0.34,"y":0.18,"w":0.35,"h":0.37,"role":"keep open"}],"placementRules":["..."]}',
+    sideOverride
+  ].filter(Boolean).join(" ");
   let result = await queryOpenRouterVision(roomImage, prompt);
   let parsed = parseJsonOutput(result.raw);
   let photoQuality = normalizePhotoQuality(parsed);
@@ -974,8 +979,8 @@ async function analyzeRoomWithOpenRouterVision(roomImage) {
   return value;
 }
 
-async function analyzeRoom(roomImage) {
-  if (process.env.OPENROUTER_API_KEY) return analyzeRoomWithOpenRouterVision(roomImage);
+async function analyzeRoom(roomImage, opts = {}) {
+  if (process.env.OPENROUTER_API_KEY) return analyzeRoomWithOpenRouterVision(roomImage, opts.sofaSide || null);
   throw new Error("A spatial vision model is required. Add OPENROUTER_API_KEY to enable room planning.");
 }
 
@@ -2016,6 +2021,18 @@ async function handleGenerate(req, res) {
       ? normalizeStyleSpec(received.styleSpec)
       : await resolveStyleSpec(normalizedReceived, styleId)
   };
+  // User asked to move the whole sofa to a side: re-plan the room with the sofa
+  // forced there (TV opposite), overriding the auto feature-wall decision.
+  const sofaSideOverride = received.sofaSideOverride === "left" || received.sofaSideOverride === "right"
+    ? received.sofaSideOverride : null;
+  if (sofaSideOverride && received.generationMode !== "local_refinement" && received.roomImage) {
+    try {
+      const replanned = await analyzeRoom(resolveLocalImageInput(received.roomImage), { sofaSide: sofaSideOverride });
+      if (replanned.layoutPlan) input.layoutPlan = replanned.layoutPlan;
+    } catch (error) {
+      console.error("[gateway] sofa-side replan failed, using original plan:", error.message);
+    }
+  }
   const provider = process.env.MODEL_PROVIDER || "mock";
 
   if (provider === "openrouter") {
